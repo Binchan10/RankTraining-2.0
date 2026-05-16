@@ -6,370 +6,155 @@
     <title>무제한 수련장</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; padding: 0; }
-        body {
-            font-family: 'Pretendard', sans-serif;
-            background: #161a24;
-            color: #dde4f0;
-            text-align: center;
-            overflow: hidden;
-        }
-        body::before {
-            content: '';
-            position: fixed; inset: 0;
-            background:
-                radial-gradient(ellipse 70% 55% at 20% 15%, rgba(99,179,255,0.07) 0%, transparent 60%),
-                radial-gradient(ellipse 55% 45% at 80% 80%, rgba(255,130,100,0.06) 0%, transparent 55%);
-            pointer-events: none; z-index: 0;
-        }
-
-        /* 메인화면 */
-        #made-by {
-            position: fixed; top: 18px; right: 22px;
-            font-size: 11px; font-weight: 500;
-            color: rgba(221,228,240,0.38); letter-spacing: 0.5px;
-            pointer-events: none; z-index: 10;
-        }
-        #intro {
-            position: fixed; inset: 0; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            z-index: 5; padding-bottom: 40px;
-        }
-        #intro h1 {
-            font-size: 48px; font-weight: 800;
-            color: #dde4f0;
-            margin: 0 0 6px 0; margin-top: -120px;
-            letter-spacing: -1.5px;
-        }
-        /* [변경 1] 버전 표기 — 타이틀 바로 아래 */
-        .intro-version {
-            font-size: 11px; font-weight: 500;
-            color: rgba(221,228,240,0.38); letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-        .intro-sub {
-            font-size: 12px; color: rgba(221,228,240,0.3);
-            letter-spacing: 3.5px; text-transform: uppercase;
-            margin-bottom: 52px; font-weight: 500;
-        }
-        #menu { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
-        #menu select {
-            width: 256px; padding: 13px 18px; font-size: 15px;
-            font-family: 'Pretendard', sans-serif; font-weight: 500;
-            border-radius: 8px;
-            border: 1px solid rgba(221,228,240,0.12);
-            background: #1e2333;
-            color: #dde4f0;
-            cursor: pointer; outline: none;
-            transition: border-color 0.2s, background 0.2s;
-            appearance: none; -webkit-appearance: none;
-        }
-        #menu select option {
-            background: #1e2333;
-            color: #dde4f0;
-        }
-        #menu select:hover {
-            border-color: rgba(221,228,240,0.25);
-            background: #252b3b;
-        }
-        #startBtn {
-            width: 256px; padding: 15px; font-size: 16px;
-            font-family: 'Pretendard', sans-serif; font-weight: 700;
-            border-radius: 8px; border: none;
-            background: #4f8ef7;
-            color: #fff;
-            cursor: pointer; margin-top: 10px;
-            letter-spacing: -0.2px;
-            box-shadow: 0 4px 18px rgba(79,142,247,0.35);
-            transition: opacity 0.15s, transform 0.12s;
-        }
-        #startBtn:hover { opacity: 0.88; transform: translateY(-1px); }
-        #startBtn:active { transform: translateY(0); opacity: 1; }
-
-        /* 옵션 체크박스 */
-        .option-group {
-            display: flex; flex-direction: column; align-items: flex-start;
-            gap: 8px; width: 256px; margin-top: 6px;
-            padding: 14px 18px;
-            border-radius: 8px;
-            border: 1px solid rgba(221,228,240,0.08);
-            background: rgba(221,228,240,0.03);
-        }
-        .option-label {
-            font-size: 11px; font-weight: 600; color: rgba(221,228,240,0.4);
-            letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 2px;
-        }
-        .option-item {
-            display: flex; align-items: center; gap: 10px;
-            cursor: pointer; width: 100%;
-        }
-        .option-item input[type="checkbox"] {
-            appearance: none; -webkit-appearance: none;
-            width: 16px; height: 16px; flex-shrink: 0;
-            border-radius: 4px;
-            border: 1.5px solid rgba(221,228,240,0.22);
-            background: transparent;
-            cursor: pointer;
-            transition: border-color 0.15s, background 0.15s;
-            position: relative;
-        }
-        .option-item input[type="checkbox"]:checked {
-            background: #4f8ef7;
-            border-color: #4f8ef7;
-        }
-        .option-item input[type="checkbox"]:checked::after {
-            content: '';
-            position: absolute; left: 3px; top: 1px;
-            width: 5px; height: 8px;
-            border: 2px solid #fff;
-            border-top: none; border-left: none;
-            transform: rotate(45deg);
-        }
-        .option-item span {
-            font-size: 14px; font-weight: 500;
-            color: rgba(221,228,240,0.75);
-            transition: color 0.15s;
-        }
-        .option-item:hover span { color: rgba(221,228,240,0.95); }
-        .option-item input:checked + span { color: #dde4f0; }
-
-        /* [변경 2] 타일 그리드 */
-        .grid {
-            display: grid; grid-template-columns: repeat(12, 1fr);
-            gap: 5px; max-width: 1440px; width: 92vw; margin: 0 auto;
-            height: 62vh; perspective: 1200px;
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -46%);
-        }
-        .tile {
-            position: relative; width: 100%; height: 100%;
-            transition: transform 1.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-style: preserve-3d;
-        }
-        .tile-face {
-            position: absolute; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 9px; font-weight: 600; font-size: 20px;
-            backface-visibility: hidden;
-            padding: 6px 8px; word-break: keep-all; overflow: hidden;
-        }
-        .tile-back { transform: rotateY(180deg); }
-        .player .tile-face {
-            background: linear-gradient(150deg, #284f8a 0%, #1a3a6a 100%);
-            color: #a8ccf7;
-            border: 1px solid rgba(120,180,255,0.25);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.3);
-        }
-        .enemy .tile-face {
-            background: linear-gradient(150deg, #8f3020 0%, #6e2015 100%);
-            color: #ffc4a8;
-            border: 1px solid rgba(255,160,110,0.25);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 2px 8px rgba(0,0,0,0.3);
-        }
-
-        /* [변경 4] 타이머 텍스트 — top 간격 확대 */
-        #timer {
-            font-size: 24px; color: rgba(221,228,240,0.9);
-            position: fixed; top: 44px; left: 50%; transform: translateX(-50%);
-            font-weight: 700; letter-spacing: -0.5px;
-            font-variant-numeric: tabular-nums;
-            transition: color 0.3s;
-            z-index: 10;
-        }
-        #timer.danger { color: #ffd166; animation: pulse 0.8s ease-in-out infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-        /* [변경 4] 시간 게이지 — 타이머와 간격 확대, 굵기 증가 */
-        #timeGaugeWrap {
-            position: fixed; top: 92px; left: 50%; transform: translateX(-50%);
-            width: 460px; z-index: 10;
-            display: none;
-        }
-        #timeGaugeBg {
-            width: 100%; height: 15px;
-            background: rgba(221,228,240,0.1);
-            border-radius: 99px;
-            overflow: hidden;
-        }
-        #timeGaugeFill {
-            height: 100%; width: 100%;
-            background: linear-gradient(90deg, #4f8ef7 0%, #63b3ff 100%);
-            border-radius: 99px;
-            transition: width 1s linear, background 0.6s ease;
-            transform-origin: left;
-        }
-        #timeGaugeFill.half {
-            background: linear-gradient(90deg, #f7a24f 0%, #ffd166 100%);
-        }
-        #timeGaugeFill.danger {
-            background: linear-gradient(90deg, #f87171 0%, #ff4f4f 100%);
-        }
-
-        /* 판수 표기 — 게이지와 단어판 중간 */
-        #liveCount {
-            position: fixed; top: 133px; left: 50%; transform: translateX(-50%);
-            font-size: 30px; font-weight: 800;
-            color: rgba(221,228,240,0.88);
-            letter-spacing: -1px;
-            font-variant-numeric: tabular-nums;
-            z-index: 10; display: none;
-        }
-
-        /* 하단 입력 바 */
-        .bottom {
-            position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 14px;
-            background: rgba(18,22,32,0.75);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(221,228,240,0.1);
-            padding: 12px 20px; border-radius: 12px;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.45);
-        }
-        .input {
-            padding: 12px 15px; width: 420px; font-size: 21px;
-            font-family: 'Pretendard', sans-serif; font-weight: 500;
-            border-radius: 7px; border: 1.5px solid rgba(221,228,240,0.13);
-            outline: none; background: rgba(221,228,240,0.06);
-            color: #dde4f0;
-            transition: border-color 0.15s, background 0.15s;
-            caret-color: #63b3ff;
-        }
-        .input::placeholder { color: rgba(221,228,240,0.22); }
-        .input:focus { border-color: rgba(99,162,255,0.45); background: rgba(221,228,240,0.09); }
-        .input.error { border-color: #f5a090; background: rgba(245,160,144,0.08); }
-
-        /* 카운트다운 */
-        #countdown {
-            font-size: 96px; font-weight: 800;
-            position: fixed; top: 44%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 100; pointer-events: none; color: #dde4f0;
-        }
-
-        /* 결과창 */
-        #result {
-            display: none; position: fixed; inset: 0;
-            background: rgba(12,15,22,0.88);
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-            align-items: center; justify-content: center; z-index: 1000;
-        }
-        .result-inner {
-            display: flex; flex-direction: row; align-items: stretch;
-            gap: 0; width: 90vw; max-width: 1100px;
-            background: rgba(221,228,240,0.03);
-            border: 1px solid rgba(221,228,240,0.1);
-            border-radius: 20px; overflow: hidden;
-        }
-        .result-left {
-            display: flex; flex-direction: column; align-items: flex-start;
-            justify-content: center; gap: 12px;
-            min-width: 310px; padding: 60px 52px;
-            border-right: 1px solid rgba(221,228,240,0.07);
-        }
-        #winLoss { font-size: 38px; font-weight: 700; letter-spacing: -0.5px; }
-        #rank {
-            font-size: 108px; font-weight: 800; color: #dde4f0; line-height: 1;
-            text-shadow: 0 0 40px rgba(221,228,240,0.12);
-            letter-spacing: -3px;
-        }
-        /* 모드 배지 */
-        #modeBadge {
-            display: flex; align-items: center; gap: 7px;
-            padding: 5px 12px; border-radius: 99px;
-            font-size: 13px; font-weight: 600; letter-spacing: 0.1px;
-            margin-top: -2px;
-        }
-        #modeBadge .badge-dot {
-            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-        }
-        #modeBadge.rank-mode {
-            background: rgba(240,160,96,0.12);
-            border: 1px solid rgba(240,160,96,0.25);
-            color: #f0a060;
-        }
-        #modeBadge.rank-mode .badge-dot { background: #f0a060; box-shadow: 0 0 6px rgba(240,160,96,0.6); }
-        #modeBadge.easy-mode {
-            background: rgba(99,179,255,0.12);
-            border: 1px solid rgba(99,179,255,0.28);
-            color: #6db8f5;
-        }
-        #modeBadge.easy-mode .badge-dot { background: #6db8f5; box-shadow: 0 0 6px rgba(109,184,245,0.65); }
-        #scoreDetail { font-size: 20px; color: rgba(221,228,240,0.55); font-weight: 500; margin-top: 4px; }
-        #accuracyDetail { font-size: 17px; color: rgba(221,228,240,0.35); }
-        .retry-btn {
-            padding: 13px 26px; font-size: 16px;
-            font-family: 'Pretendard', sans-serif; font-weight: 600;
-            border-radius: 8px; border: 1px solid rgba(221,228,240,0.14);
-            cursor: pointer; background: transparent; color: rgba(221,228,240,0.55);
-            margin-top: 22px; letter-spacing: 0.2px;
-            transition: border-color 0.15s, color 0.15s;
-        }
-        .retry-btn:hover { border-color: rgba(221,228,240,0.3); color: #dde4f0; }
-        .result-right {
-            flex: 1; display: flex; flex-direction: column;
-            justify-content: center; align-items: stretch;
-            padding: 48px 44px; min-width: 0;
-        }
-        .chart-title {
-            font-size: 15px; color: rgba(221,228,240,0.45);
-            font-weight: 600; letter-spacing: 1.5px;
-            text-transform: uppercase; margin-bottom: 16px; text-align: left;
-        }
-        #chartCanvas { width: 100%; height: 280px; display: block; border-radius: 6px; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- 프리미엄 설정 모달 -->
+    <div id="settingsOverlay" class="settings-overlay">
+        <div id="settingsModal" class="settings-modal">
+            <div class="settings-header">
+                <h2>환경 설정</h2>
+                <button id="settingsClose" class="settings-close-btn" aria-label="닫기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="settings-body">
+                <div class="setting-group-v2">
+                    <div class="option-label">게임 옵션</div>
+                    <div class="settings-grid">
+                        <label class="option-item-v2">
+                            <span>사이드 스왑 (Side Swap)</span>
+                            <div class="toggle-switch-wrapper">
+                                <input type="checkbox" id="optFlip" class="toggle-input">
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </label>
+                        <label class="option-item-v2">
+                            <span>이지 모드 (Easy Mode)</span>
+                            <div class="toggle-switch-wrapper">
+                                <input type="checkbox" id="optEasy" class="toggle-input">
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </label>
+                        <label class="option-item-v2">
+                            <span>음소거 (Mute)</span>
+                            <div class="toggle-switch-wrapper">
+                                <input type="checkbox" id="optMute" class="toggle-input">
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-group-v2">
+                    <div class="option-label">디자인 & 배경</div>
+                    
+                    <div class="setting-item-v2">
+                        <label class="setting-label" for="colorPreset">판 색상 프리셋</label>
+                        <div class="custom-select-wrapper">
+                            <select id="colorPreset" class="premium-select">
+                                <option value="classic">클래식 (Classic)</option>
+                                <option value="aurora">오로라 (Aurora)</option>
+                                <option value="solar">솔라 (Solar)</option>
+                                <option value="forest">포레스트 (Forest)</option>
+                                <option value="mono">모노 (Mono)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-item-v2">
+                        <div class="setting-label">배경 이미지</div>
+                        <div class="setting-row-v2">
+                            <label for="bgFile" class="file-upload-btn">이미지 선택</label>
+                            <input type="file" id="bgFile" accept="image/*" style="display:none;">
+                            <button type="button" id="bgClear" class="danger-btn">제거</button>
+                        </div>
+                        <div id="bgStatus" class="setting-help">선택된 이미지 없음</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 설정 톱니바퀴 버튼 -->
+    <button type="button" id="settingsToggle" class="premium-gear-btn" aria-label="설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+    </button>
+
+    <!-- 제작자 표기 -->
     <div id="made-by">Created by Divide</div>
+
+    <!-- ─── 인트로 / 메인 메뉴 ─────────────────────────── -->
     <div id="intro">
         <h1>무제한 수련장</h1>
-        <!-- [변경 1] 버전 표기 -->
         <div class="intro-version">v2.0</div>
         <div class="intro-sub">Typing Training</div>
+
         <div id="menu">
-            <select id="time"><option value="60">수련 시간: 1분</option><option value="120">수련 시간: 2분</option></select>
-            <select id="speed">
-                <option value="300">목표 속도: 300타</option><option value="400">목표 속도: 400타</option>
-                <option value="500">목표 속도: 500타</option><option value="600">목표 속도: 600타</option>
-                <option value="700">목표 속도: 700타</option><option value="800">목표 속도: 800타</option>
-                <option value="900">목표 속도: 900타</option><option value="1000" selected>목표 속도: 1000타</option>
-                <option value="1100">목표 속도: 1100타</option><option value="1200">목표 속도: 1200타</option>
+            <!-- 수련 시간 -->
+            <select id="time">
+                <option value="60">수련 시간: 1분</option>
+                <option value="120">수련 시간: 2분</option>
             </select>
-            <div class="option-group">
-                <div class="option-label">Options</div>
-                <label class="option-item">
-                    <input type="checkbox" id="optFlip">
-                    <span>Side Swap</span>
-                </label>
-                <label class="option-item">
-                    <input type="checkbox" id="optEasy">
-                    <span>Easy Mode</span>
-                </label>
-                <label class="option-item">
-                    <input type="checkbox" id="optMute">
-                    <span>Mute</span>
-                </label>
-            </div>
+
+            <!-- 목표 속도 -->
+            <select id="speed">
+                <option value="300">목표 속도: 300타</option>
+                <option value="400">목표 속도: 400타</option>
+                <option value="500">목표 속도: 500타</option>
+                <option value="600">목표 속도: 600타</option>
+                <option value="700">목표 속도: 700타</option>
+                <option value="800">목표 속도: 800타</option>
+                <option value="900">목표 속도: 900타</option>
+                <option value="1000" selected>목표 속도: 1000타</option>
+                <option value="1100">목표 속도: 1100타</option>
+                <option value="1200">목표 속도: 1200타</option>
+            </select>
+
+            <!-- 설정 버튼과 패널은 모달로 이동됨 -->
+
             <button id="startBtn">수련 시작</button>
         </div>
     </div>
+
+    <!-- ─── 게임 HUD ──────────────────────────────────── -->
     <div id="timer"></div>
+
     <div id="timeGaugeWrap">
         <div id="timeGaugeBg">
             <div id="timeGaugeFill"></div>
         </div>
     </div>
+
     <div id="liveCount"></div>
+
+    <!-- 카운트다운 오버레이 -->
     <div id="countdown"></div>
+
+    <!-- ─── 타일 그리드 ───────────────────────────────── -->
     <div class="grid" id="grid"></div>
+
+    <!-- ─── 하단 입력 바 ──────────────────────────────── -->
     <div class="bottom" id="bottom" style="display:none">
         <input id="input" class="input" autocomplete="off" placeholder="단어를 입력하세요">
     </div>
+
+    <!-- ─── 결과창 ────────────────────────────────────── -->
     <div id="result">
         <div class="result-inner">
             <div class="result-left">
                 <div id="winLoss"></div>
                 <div id="rank"></div>
-                <div id="modeBadge"><div class="badge-dot"></div><span id="modeLabel"></span></div>
+                <div id="modeBadge">
+                    <div class="badge-dot"></div>
+                    <span id="modeLabel"></span>
+                </div>
                 <div id="scoreDetail"></div>
                 <div id="accuracyDetail"></div>
                 <button class="retry-btn" onclick="location.reload()">처음으로</button>
@@ -380,379 +165,30 @@
             </div>
         </div>
     </div>
+
+    <!-- ─── JavaScript — 의존성 순서대로 로드 ────────── -->
+    <!--
+        로드 순서:
+        1. config.js   — WORDS, COLOR_PRESETS, FLIP_DURATION, getRank (공유 상수)
+        2. audio.js    — audioCtx, playSuccessSound, playFlipSound
+        3. settings.js — LS, applyColorPreset, applyBackgroundImage, loadSettings, initSettingsListeners
+        4. ui.js       — renderAll, updateTimerDisplay, updateGauge, updateLiveCount, runCountdown, showGameUI, hideIntro
+        5. result.js   — showResult, drawChart  (getRank는 config.js에서 제공)
+        6. game.js     — prep, start, end, enemy, flip, initGameListeners (위 모두 참조)
+    -->
+    <script src="js/config.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/result.js"></script>
+    <script src="js/game.js"></script>
+
+    <!-- 초기화 — 모든 모듈 로드 후 실행 -->
     <script>
-        const words = ["눈", "불", "책", "해", "강", "집", "밥", "길", "손", "꿈", "산", "물", "달", "발", "빵", "꽃", "가람", "가족", "감다", "걷다", "경제", "경험", "계절", "고삐", "공원", "기린", "기술", "기억", "기타", "기획", "까막", "까치", "나라", "나무", "놀다", "늑대", "단비", "도시", "돕다", "듣다", "만세", "매듭", "먹다", "문화", "물개", "미래", "바다", "병원", "보다", "사람", "사자", "살다", "상점", "생각", "수달", "시간", "쓰다", "아라", "아람", "아침", "알다", "역사", "여우", "여울", "오리", "웃다", "울다", "이리", "읽다", "입술", "자다", "전체", "정보", "종교", "지게", "참새", "취미", "친구", "타자", "택시", "파란", "필사", "하늘", "학교", "학생", "한글", "한별", "한울", "행복", "헌법", "호미", "회사", "흑호", "희망", "환경", "가르치다", "가온누리", "각골난망", "감동시키다", "감사하다", "강아지", "개발하다", "결정하다", "계획하다", "경험하다", "고등학교", "고려하다", "고양이", "공부하다", "관찰하다", "과학자", "구경하다", "기다리다", "기억하다", "길노래", "금강송", "꽃내음", "그대에게", "나래움", "나래한별", "노력하다", "누리집", "다람쥐", "다리미", "달구지", "달리다", "대학교", "도서관", "도원결의", "도전정신", "도전하다", "독립운동", "드라마", "들국화", "들꽃내음", "마루빛", "만나다", "만족스럽다", "멧돼지", "무한궤도", "무한도전", "민주주의", "박물관", "바다빛", "받아쓰기", "반달곰", "발견하다", "발전시키다", "배우다", "분석하다", "부르다", "부장님", "비석치기", "별이슬", "사자성어", "사무실", "산들바람", "삼일절", "새미꽃", "새벽결", "생각하다", "서리꽃", "선생님", "설득하다", "설명하다", "세종대왕", "소모임", "소통하다", "솔내음", "솔방울", "수리하다", "수영하다", "실망하다", "실천하다", "아라별빛", "여행자", "여행하다", "연락하다", "연구하다", "연구소", "영화관", "예술가", "오락실", "오징어게임", "우물터", "운동선수", "운동장", "운동하다", "월급날", "월급통장", "음악가", "음식점", "이순신", "이슬별빛", "이야기", "이해하다", "인터넷", "잎새바람", "전문가", "정리정돈하다", "존중하다", "준비하다", "중학교", "즐거운", "집중하다", "참여하다", "청설모", "청소하다", "초롱빛", "축하하다", "캠핑카", "컴퓨터", "타자검정", "타자마을", "타자연습", "타자학습", "통화하다", "판뒤집기", "푸른결", "하늘소", "한국문학", "한가람", "한글날", "한마루", "한컴타자", "해오라기", "협력하다", "호수빛", "휴대폰"];
-        const g = id => document.getElementById(id);
-        let tiles = [], started = false, timeLeft, totalTime;
-        let totalHits = 0, totalMisses = 0, enemyFlips = 0, enemyTimer;
-        let segmentHits = [], segmentDuration, segmentIndex = 0, segmentTimer;
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        const LS = {
-            get: (k, def) => { const v = localStorage.getItem('suzren_' + k); return v !== null ? v : def; },
-            set: (k, v) => localStorage.setItem('suzren_' + k, v)
-        };
-        function loadSettings() {
-            g('time').value = LS.get('time', '60');
-            g('speed').value = LS.get('speed', '1000');
-            g('optEasy').checked = LS.get('easy', 'false') === 'true';
-            g('optFlip').checked = LS.get('flip', 'false') === 'true';
-            g('optMute').checked = LS.get('mute', 'false') === 'true';
-        }
-        function saveSettings() {
-            LS.set('time', g('time').value);
-            LS.set('speed', g('speed').value);
-            LS.set('easy', g('optEasy').checked);
-            LS.set('flip', g('optFlip').checked);
-            LS.set('mute', g('optMute').checked);
-        }
         loadSettings();
-        g('time').addEventListener('change', saveSettings);
-        g('speed').addEventListener('change', saveSettings);
-        g('optEasy').addEventListener('change', saveSettings);
-        g('optFlip').addEventListener('change', saveSettings);
-        g('optMute').addEventListener('change', saveSettings);
-
-        function isMuted() { return g('optMute').checked; }
-
-        function playSuccessSound() {
-            if (isMuted()) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const t = audioCtx.currentTime;
-            [[0, 880, 0.18], [0.11, 1108, 0.22]].forEach(([delay, freq, dur]) => {
-                const osc = audioCtx.createOscillator(), gn = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, t + delay);
-                gn.gain.setValueAtTime(0.0, t + delay);
-                gn.gain.linearRampToValueAtTime(0.13, t + delay + 0.006);
-                gn.gain.exponentialRampToValueAtTime(0.001, t + delay + dur);
-                const osc2 = audioCtx.createOscillator(), gn2 = audioCtx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(freq * 3.0, t + delay);
-                gn2.gain.setValueAtTime(0.0, t + delay);
-                gn2.gain.linearRampToValueAtTime(0.03, t + delay + 0.006);
-                gn2.gain.exponentialRampToValueAtTime(0.001, t + delay + dur * 0.4);
-                osc.connect(gn); gn.connect(audioCtx.destination);
-                osc2.connect(gn2); gn2.connect(audioCtx.destination);
-                osc.start(t + delay); osc.stop(t + delay + dur);
-                osc2.start(t + delay); osc2.stop(t + delay + dur);
-            });
-        }
-
-        function playFlipSound() {
-            if (isMuted()) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const t = audioCtx.currentTime;
-            const bufSize = Math.floor(audioCtx.sampleRate * 0.06);
-            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-            const data = buf.getChannelData(0);
-            for (let i = 0; i < bufSize; i++) {
-                const env = Math.exp(-i / (bufSize * 0.15));
-                data[i] = (Math.random() * 2 - 1) * env;
-            }
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buf;
-            const bpf = audioCtx.createBiquadFilter();
-            bpf.type = 'bandpass'; bpf.frequency.value = 900; bpf.Q.value = 0.5;
-            const ng = audioCtx.createGain();
-            ng.gain.setValueAtTime(1.1, t);
-            ng.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-            noise.connect(bpf); bpf.connect(ng); ng.connect(audioCtx.destination);
-            noise.start(t); noise.stop(t + 0.06);
-            const osc = audioCtx.createOscillator(), og = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(300, t);
-            osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
-            og.gain.setValueAtTime(0.18, t);
-            og.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-            osc.connect(og); og.connect(audioCtx.destination);
-            osc.start(t); osc.stop(t + 0.14);
-        }
-
-        const FLIP_DURATION = 1400;
-
-        function flip(index, newOwner, afterFlip) {
-            tiles[index].owner = newOwner;
-            tiles[index].word = rand();
-            tiles[index].rotation += 180;
-            if (newOwner === 'player') {
-                tiles[index].blockedUntil = Date.now() + FLIP_DURATION;
-            }
-            const container = g('tile-container-' + index);
-            if (container) {
-                container.style.transform = 'rotateY(' + tiles[index].rotation + 'deg)';
-                setTimeout(() => {
-                    container.className = 'tile ' + newOwner;
-                    container.querySelectorAll('.tile-face').forEach(f => f.textContent = tiles[index].word);
-                }, 170);
-            }
-            if (afterFlip) setTimeout(afterFlip, FLIP_DURATION);
-        }
-
-        function rand() {
-            let word, currentWords = tiles.map(t => t.word);
-            const isEasy = g('optEasy').checked;
-            const pool = isEasy ? words.filter(w => w.length <= 3) : words;
-            do { word = pool[Math.floor(Math.random() * pool.length)]; } while (currentWords.includes(word));
-            return word;
-        }
-
-        function renderAll(showText = true) {
-            const grid = g('grid'); grid.innerHTML = '';
-            tiles.forEach((t, i) => {
-                let container = document.createElement('div');
-                container.id = 'tile-container-' + i;
-                container.className = 'tile ' + t.owner;
-                container.style.transform = 'rotateY(' + t.rotation + 'deg)';
-                let front = document.createElement('div');
-                front.className = 'tile-face tile-front';
-                front.textContent = showText ? t.word : '';
-                let back = document.createElement('div');
-                back.className = 'tile-face tile-back';
-                back.textContent = showText ? t.word : '';
-                container.appendChild(front);
-                container.appendChild(back);
-                grid.appendChild(container);
-            });
-        }
-
-        function getRank(n) {
-            if (n >= 157) return 'L'; if (n >= 144) return 'SSS'; if (n >= 132) return 'SS+'; if (n >= 121) return 'SS';
-            if (n >= 110) return 'S+'; if (n >= 99) return 'S'; if (n >= 89) return 'A+'; if (n >= 81) return 'A';
-            if (n >= 72) return 'B+'; if (n >= 66) return 'B'; if (n >= 57) return 'C+'; if (n >= 51) return 'C';
-            if (n >= 42) return 'D+'; if (n >= 36) return 'D'; if (n >= 27) return 'E+'; if (n >= 21) return 'E'; return 'F';
-        }
-
-        function prep() {
-            g('intro').style.display = 'none';
-            tiles = []; totalHits = 0; totalMisses = 0; enemyFlips = 0;
-            totalTime = parseInt(g('time').value);
-            segmentDuration = totalTime / 10;
-            segmentHits = new Array(10).fill(0);
-            segmentIndex = 0;
-            const isFlipped = g('optFlip').checked;
-            for (let i = 0; i < 60; i++) {
-                const col = i % 12;
-                const isPlayerCol = isFlipped ? (col >= 6) : (col < 6);
-                tiles.push({ owner: isPlayerCol ? 'player' : 'enemy', word: '', rotation: 0 });
-                tiles[i].word = rand();
-            }
-            renderAll(false);
-            let c = 3, cd = g('countdown'); cd.textContent = c;
-            let iv = setInterval(() => {
-                c--; if (c > 0) cd.textContent = c;
-                else { clearInterval(iv); cd.textContent = ''; start(); }
-            }, 1000);
-        }
-
-        function updateLiveCount() {
-            g('liveCount').textContent = totalHits;
-        }
-
-        function start() {
-            started = true; g('bottom').style.display = 'flex'; g('input').focus();
-            g('timeGaugeWrap').style.display = 'block';
-            g('liveCount').style.display = 'block';
-            updateGauge();
-            renderAll(true); timeLeft = totalTime; tick(); enemy(); segmentTick();
-        }
-
-        function updateGauge() {
-            const fill = g('timeGaugeFill');
-            const pct = (timeLeft / totalTime) * 100;
-            fill.style.width = pct + '%';
-            if (timeLeft <= 10) {
-                fill.classList.remove('half');
-                fill.classList.add('danger');
-            } else if (timeLeft <= totalTime / 2) {
-                fill.classList.remove('danger');
-                fill.classList.add('half');
-            } else {
-                fill.classList.remove('half', 'danger');
-            }
-        }
-
-        function segmentTick() {
-            if (!started) return;
-            segmentTimer = setTimeout(() => {
-                segmentIndex = Math.min(segmentIndex + 1, 9);
-                segmentTick();
-            }, segmentDuration * 1000);
-        }
-
-        function tick() {
-            if (!started) return;
-            const timerEl = g('timer');
-            timerEl.textContent = '남은 시간: ' + timeLeft + '초';
-            if (timeLeft <= 10) timerEl.classList.add('danger');
-            else timerEl.classList.remove('danger');
-            updateGauge();
-            if (timeLeft > 0) { timeLeft--; setTimeout(tick, 1000); } else end();
-        }
-
-        function enemy() {
-            if (!started) return;
-            clearTimeout(enemyTimer);
-            const now = Date.now();
-            let pIndices = tiles.map((t, i) =>
-                (t.owner === 'player' && !(t.blockedUntil && t.blockedUntil > now)) ? i : -1
-            ).filter(i => i !== -1);
-            if (!pIndices.length) { enemyTimer = setTimeout(enemy, 500); return; }
-            let short = pIndices.filter(i => tiles[i].word.length <= 3);
-            let targetIdx = (Math.random() < 0.70 && short.length) ? short[Math.floor(Math.random()*short.length)] : pIndices[Math.floor(Math.random()*pIndices.length)];
-            let baseSpeed = parseInt(g('speed').value);
-            let variance = 1 - (0.03 + Math.random() * 0.17);
-            let adjustedSpeed = baseSpeed * variance;
-            let delay = ((tiles[targetIdx].word.length * 2.7) / (adjustedSpeed / 60)) * 1000;
-            enemyTimer = setTimeout(() => {
-                if (!started) return;
-                if (tiles[targetIdx].owner !== 'player') { enemy(); return; }
-                flip(targetIdx, 'enemy');
-                playFlipSound();
-                enemyFlips++;
-                enemy();
-            }, delay);
-        }
-
-        function drawChart(data) {
-            const canvas = g('chartCanvas');
-            const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-            const W = rect.width, H = rect.height;
-            const pad = { top: 18, right: 20, bottom: 36, left: 40 };
-            const chartW = W - pad.left - pad.right;
-            const chartH = H - pad.top - pad.bottom;
-            const rawMax = Math.max(...data, 1);
-            const maxVal = Math.ceil(rawMax * 1.35 / 5) * 5;
-
-            const pts = data.map((v, i) => ({
-                x: pad.left + ((i + 0.5) / data.length) * chartW,
-                y: pad.top + chartH - (v / maxVal) * chartH,
-                label: (i + 1) * segmentDuration + 's',
-                midTime: ((i + 0.5) * segmentDuration).toFixed(0) + 's'
-            }));
-
-            ctx.fillStyle = 'rgba(255,255,255,0.04)';
-            ctx.beginPath();
-            ctx.roundRect(0, 0, W, H, 8);
-            ctx.fill();
-
-            const gridLines = 4;
-            for (let i = 0; i <= gridLines; i++) {
-                const y = pad.top + chartH - (i / gridLines) * chartH;
-                ctx.beginPath();
-                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-                ctx.lineWidth = 1;
-                ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + chartW, y);
-                ctx.stroke();
-                ctx.fillStyle = 'rgba(255,255,255,0.35)';
-                ctx.font = '11px sans-serif';
-                ctx.textAlign = 'right';
-                ctx.fillText(Math.round((i / gridLines) * maxVal), pad.left - 6, y + 4);
-            }
-
-            for (let i = 1; i < data.length; i++) {
-                const x = pad.left + (i / data.length) * chartW;
-                ctx.beginPath();
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.setLineDash([3, 5]);
-                ctx.lineWidth = 1;
-                ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + chartH);
-                ctx.stroke();
-            }
-            ctx.setLineDash([]);
-
-            ctx.beginPath();
-            ctx.moveTo(pts[0].x, pts[0].y);
-            for (let i = 1; i < pts.length; i++) {
-                const mx = (pts[i-1].x + pts[i].x) / 2;
-                ctx.bezierCurveTo(mx, pts[i-1].y, mx, pts[i].y, pts[i].x, pts[i].y);
-            }
-            ctx.lineTo(pts[pts.length-1].x, pad.top + chartH);
-            ctx.lineTo(pts[0].x, pad.top + chartH);
-            ctx.closePath();
-            const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
-            grad.addColorStop(0, 'rgba(99,179,255,0.3)');
-            grad.addColorStop(1, 'rgba(99,179,255,0.02)');
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.moveTo(pts[0].x, pts[0].y);
-            for (let i = 1; i < pts.length; i++) {
-                const mx = (pts[i-1].x + pts[i].x) / 2;
-                ctx.bezierCurveTo(mx, pts[i-1].y, mx, pts[i].y, pts[i].x, pts[i].y);
-            }
-            ctx.strokeStyle = '#63b3ff';
-            ctx.lineWidth = 2.5;
-            ctx.stroke();
-
-            pts.forEach((p, i) => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
-                ctx.fillStyle = '#63b3ff';
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff';
-                ctx.fill();
-
-                const xBoundary = pad.left + ((i + 1) / data.length) * chartW;
-                ctx.fillStyle = 'rgba(255,255,255,0.35)';
-                ctx.font = '11px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(p.label, xBoundary, pad.top + chartH + 18);
-            });
-        }
-
-        function end() {
-            started = false; clearTimeout(enemyTimer); clearTimeout(segmentTimer);
-            const pCount = tiles.filter(t => t.owner === 'player').length;
-            const eCount = tiles.filter(t => t.owner === 'enemy').length;
-            let wlText = "무승부", wlColor = "#94a3b8";
-            if (pCount > eCount) { wlText = "수련 성공!"; wlColor = "#4ade80"; }
-            else if (pCount < eCount) { wlText = "수련 실패..."; wlColor = "#f87171"; }
-            const totalAttempts = totalHits + totalMisses;
-            const accuracy = totalAttempts > 0 ? ((totalHits / totalAttempts) * 100).toFixed(1) : '100.0';
-            const isEasy = g('optEasy').checked;
-            const badge = g('modeBadge');
-            badge.className = isEasy ? 'easy-mode' : 'rank-mode';
-            g('modeLabel').textContent = isEasy ? 'Easy Mode' : 'Rank Mode';
-            g('result').style.display = 'flex';
-            g('winLoss').textContent = wlText;
-            g('winLoss').style.color = wlColor;
-            g('rank').textContent = getRank(totalHits);
-            g('scoreDetail').textContent = '나 ' + totalHits + '개 VS 상대 ' + enemyFlips + '개';
-            g('accuracyDetail').textContent = '정확도 ' + totalHits + '/' + totalAttempts + ' (' + accuracy + '%)';
-            requestAnimationFrame(() => drawChart(segmentHits));
-        }
-
-        g('input').addEventListener('keydown', e => {
-            if ((e.key === 'Enter' || e.key === ' ') && started) {
-                e.preventDefault();
-                let v = e.target.value.trim();
-                if (!v) return;
-                let idx = tiles.findIndex(t => t.word === v && t.owner === 'enemy');
-                if (idx !== -1) {
-                    playSuccessSound();
-                    flip(idx, 'player');
-                    totalHits++;
-                    segmentHits[segmentIndex]++;
-                    updateLiveCount();
-                } else {
-                    totalMisses++;
-                    const inp = g('input');
-                    inp.classList.add('error');
-                    setTimeout(() => inp.classList.remove('error'), 300);
-                }
-                e.target.value = '';
-            }
-        });
-        g('startBtn').addEventListener('click', prep);
+        initSettingsListeners();
+        initSettingsPanel();
+        initGameListeners();
     </script>
 </body>
 </html>
