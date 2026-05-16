@@ -102,33 +102,35 @@ function loadSettings() {
 
 // ─── 설정 패널 토글 ─────────────────────────────────────
 
-/** 추가 설정 패널을 열고 닫는다. */
+/** 추가 설정 패널(모달)을 열고 닫는다. */
 function initSettingsPanel() {
     const toggle = document.getElementById('settingsToggle');
-    const panel  = document.getElementById('settingsPanel');
-    if (!toggle || !panel) return;
+    const overlay = document.getElementById('settingsOverlay');
+    const closeBtn = document.getElementById('settingsClose');
+    if (!toggle || !overlay) return;
 
     const setOpen = (open) => {
-        panel.classList.toggle('open', open);
-        panel.hidden = !open;
-        toggle.setAttribute('aria-expanded', String(open));
+        if (open) {
+            overlay.classList.add('open');
+        } else {
+            overlay.classList.remove('open');
+        }
     };
 
-    setOpen(false);
+    toggle.addEventListener('click', () => setOpen(true));
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => setOpen(false));
+    }
 
-    toggle.addEventListener('click', () => {
-        const nextOpen = !panel.classList.contains('open');
-        setOpen(nextOpen);
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!panel.classList.contains('open')) return;
-        if (panel.contains(e.target) || toggle.contains(e.target)) return;
-        setOpen(false);
+    overlay.addEventListener('click', (e) => {
+        // 모달 바깥 배경 클릭 시 닫기
+        if (e.target === overlay) {
+            setOpen(false);
+        }
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && panel.classList.contains('open')) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) {
             setOpen(false);
         }
     });
