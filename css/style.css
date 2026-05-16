@@ -102,6 +102,50 @@ body::before {
     background: #252b3b;
 }
 
+.settings-toggle {
+    width: 256px; padding: 12px 14px;
+    font-size: 14px; font-weight: 600;
+    font-family: 'Pretendard', sans-serif;
+    color: rgba(221,228,240,0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(221,228,240,0.12);
+    background: rgba(221,228,240,0.04);
+    cursor: pointer; outline: none;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.settings-toggle:hover {
+    border-color: rgba(221,228,240,0.25);
+    background: rgba(221,228,240,0.08);
+    color: #dde4f0;
+}
+
+.settings-toggle-inner {
+    display: inline-flex; align-items: center; gap: 8px;
+}
+
+.settings-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+}
+
+.settings-icon svg {
+    width: 16px; height: 16px;
+    fill: none; stroke: currentColor; stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+
+.settings-panel {
+    display: none;
+    flex-direction: column; align-items: center; gap: 10px;
+    width: 100%;
+}
+
+.settings-panel.open {
+    display: flex;
+}
+
 #startBtn {
     width: 256px; padding: 15px; font-size: 16px;
     font-family: 'Pretendard', sans-serif; font-weight: 700;
@@ -197,10 +241,12 @@ body::before {
 
 .setting-row {
     display: flex; align-items: center; gap: 8px; width: 100%;
+    flex-wrap: wrap;
 }
 
 #bgFile {
-    flex: 1;
+    flex: 1 1 180px;
+    min-width: 0; width: 100%; max-width: 100%;
     padding: 8px 10px; font-size: 12px;
     border-radius: 6px;
     border: 1px solid rgba(221,228,240,0.14);
@@ -229,6 +275,7 @@ body::before {
     color: rgba(221,228,240,0.7);
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
+    white-space: nowrap;
 }
 
 .mini-btn:hover {

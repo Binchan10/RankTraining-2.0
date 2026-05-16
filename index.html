@@ -39,47 +39,65 @@
                 <option value="1200">목표 속도: 1200타</option>
             </select>
 
-            <!-- 게임 옵션 -->
-            <div class="option-group">
-                <div class="option-label">Options</div>
-                <label class="option-item">
-                    <input type="checkbox" id="optFlip">
-                    <span>Side Swap</span>
-                </label>
-                <label class="option-item">
-                    <input type="checkbox" id="optEasy">
-                    <span>Easy Mode</span>
-                </label>
-                <label class="option-item">
-                    <input type="checkbox" id="optMute">
-                    <span>Mute</span>
-                </label>
-            </div>
+            <button type="button" id="settingsToggle" class="settings-toggle" aria-expanded="false" aria-controls="settingsPanel">
+                <span class="settings-toggle-inner">
+                    <span class="settings-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <line x1="4" y1="6" x2="14" y2="6"></line>
+                            <circle cx="18" cy="6" r="2"></circle>
+                            <line x1="4" y1="12" x2="10" y2="12"></line>
+                            <circle cx="14" cy="12" r="2"></circle>
+                            <line x1="4" y1="18" x2="16" y2="18"></line>
+                            <circle cx="20" cy="18" r="2"></circle>
+                        </svg>
+                    </span>
+                    <span>추가 설정</span>
+                </span>
+            </button>
 
-            <!-- 환경 설정 -->
-            <div class="setting-group">
-                <div class="option-label">Settings</div>
-
-                <!-- 배경 이미지 -->
-                <div class="setting-item">
-                    <div class="setting-label">배경 이미지</div>
-                    <div class="setting-row">
-                        <input type="file" id="bgFile" accept="image/*">
-                        <button type="button" id="bgClear" class="mini-btn">제거</button>
-                    </div>
-                    <div id="bgStatus" class="setting-help">선택된 이미지 없음</div>
+            <div id="settingsPanel" class="settings-panel" hidden>
+                <!-- 게임 옵션 -->
+                <div class="option-group">
+                    <div class="option-label">Options</div>
+                    <label class="option-item">
+                        <input type="checkbox" id="optFlip">
+                        <span>Side Swap</span>
+                    </label>
+                    <label class="option-item">
+                        <input type="checkbox" id="optEasy">
+                        <span>Easy Mode</span>
+                    </label>
+                    <label class="option-item">
+                        <input type="checkbox" id="optMute">
+                        <span>Mute</span>
+                    </label>
                 </div>
 
-                <!-- 색상 프리셋 -->
-                <div class="setting-item">
-                    <label class="setting-label" for="colorPreset">판 색상 프리셋</label>
-                    <select id="colorPreset">
-                        <option value="classic">클래식</option>
-                        <option value="aurora">오로라</option>
-                        <option value="solar">솔라</option>
-                        <option value="forest">포레스트</option>
-                        <option value="mono">모노</option>
-                    </select>
+                <!-- 환경 설정 -->
+                <div class="setting-group">
+                    <div class="option-label">Settings</div>
+
+                    <!-- 배경 이미지 -->
+                    <div class="setting-item">
+                        <div class="setting-label">배경 이미지</div>
+                        <div class="setting-row">
+                            <input type="file" id="bgFile" accept="image/*">
+                            <button type="button" id="bgClear" class="mini-btn">제거</button>
+                        </div>
+                        <div id="bgStatus" class="setting-help">선택된 이미지 없음</div>
+                    </div>
+
+                    <!-- 색상 프리셋 -->
+                    <div class="setting-item">
+                        <label class="setting-label" for="colorPreset">판 색상 프리셋</label>
+                        <select id="colorPreset">
+                            <option value="classic">클래식</option>
+                            <option value="aurora">오로라</option>
+                            <option value="solar">솔라</option>
+                            <option value="forest">포레스트</option>
+                            <option value="mono">모노</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -151,6 +169,7 @@
     <script>
         loadSettings();
         initSettingsListeners();
+        initSettingsPanel();
         initGameListeners();
     </script>
 </body>

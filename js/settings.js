@@ -100,6 +100,40 @@ function loadSettings() {
     updateBgStatus(savedBgName);
 }
 
+// ─── 설정 패널 토글 ─────────────────────────────────────
+
+/** 추가 설정 패널을 열고 닫는다. */
+function initSettingsPanel() {
+    const toggle = document.getElementById('settingsToggle');
+    const panel  = document.getElementById('settingsPanel');
+    if (!toggle || !panel) return;
+
+    const setOpen = (open) => {
+        panel.classList.toggle('open', open);
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+    };
+
+    setOpen(false);
+
+    toggle.addEventListener('click', () => {
+        const nextOpen = !panel.classList.contains('open');
+        setOpen(nextOpen);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!panel.classList.contains('open')) return;
+        if (panel.contains(e.target) || toggle.contains(e.target)) return;
+        setOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && panel.classList.contains('open')) {
+            setOpen(false);
+        }
+    });
+}
+
 // ─── 이벤트 바인딩 ──────────────────────────────────────
 
 /** 설정 관련 모든 이벤트 리스너를 등록한다. */
