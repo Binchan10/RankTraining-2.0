@@ -19,7 +19,7 @@ const TRACKS = [
     { file: 'Kerning_Square.mp3',              name: 'Kerning Square',            gain: 1.0 },
     { file: 'Leafre.mp3',                      name: 'Leafre',                    gain: 1.0 },
     { file: 'LucidDream2.m4a',                 name: 'Lucid Dream',               gain: 1.0 },
-    { file: 'Luen_s_House.mp3',                name: "Luen's House",              gain: 1.0 },
+    { file: 'Luens_House.mp3',                 name: "Luen's House",              gain: 1.0 },
     { file: 'Missing_You.mp3',                 name: 'Missing You',               gain: 1.0 },
     { file: 'Mushroom_Castle.mp3',             name: 'Mushroom Castle',           gain: 1.0 },
     { file: 'Night_Market.mp3',                name: 'Night Market',              gain: 1.0 },
