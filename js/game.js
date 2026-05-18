@@ -7,6 +7,7 @@
 
 let tiles         = [];    // { owner, word, rotation, blockedUntil? }
 let started       = false;
+let paused        = false;
 
 // 통계
 let totalHits     = 0;
@@ -88,7 +89,7 @@ function flip(index, newOwner, afterFlip) {
  * - 목표 속도와 ±17% 분산으로 딜레이를 계산
  */
 function enemy() {
-    if (!started) return;
+    if (!started || paused) return;
     clearTimeout(enemyTimer);
 
     const now      = Date.now();
@@ -136,7 +137,7 @@ function segmentTick() {
 
 /** 1초마다 호출되어 타이머 UI를 갱신하고 시간이 다 되면 게임을 종료한다. */
 function tick() {
-    if (!started) return;
+    if (!started || paused) return;
     updateTimerDisplay(timeLeft);
     updateGauge(timeLeft, totalTime);
     if (timeLeft > 0) {
@@ -222,6 +223,37 @@ function end() {
     });
 }
 
+// ─── 홈으로 ─────────────────────────────────────────────
+
+/** 게임 상태만 리셋하고 메인화면으로 (음악 유지) */
+function goHome() {
+    started = false;
+    paused  = false;
+    clearTimeout(enemyTimer);
+    clearTimeout(segmentTimer);
+
+    // 오버레이 정리
+    document.getElementById('pauseOverlay').classList.remove('active');
+    document.getElementById('result').style.display = 'none';
+
+    // UI 초기화
+    document.getElementById('intro').style.display       = 'flex';
+    document.getElementById('bottom').style.display      = 'none';
+    document.getElementById('timeGaugeWrap').style.display = 'none';
+    document.getElementById('liveCount').style.display   = 'none';
+    document.getElementById('timer').textContent         = '';
+    document.getElementById('countdown').textContent     = '';
+    document.getElementById('grid').innerHTML            = '';
+    document.getElementById('input').value               = '';
+    document.getElementById('input').classList.remove('error');
+
+    setGameBackgroundActive(false);
+
+    // 시간 숨김 설정 재적용
+    const hideTimer = document.getElementById('optHideTimer')?.checked;
+    applyHideTimer(hideTimer);
+}
+
 // ─── 재시작 ─────────────────────────────────────────────
 
 /** 게임 중 ↑+R 단축키로 즉시 재시작한다. */
@@ -263,6 +295,55 @@ function initGameListeners() {
         }
     });
 
+    // ESC → 일시정지 / 홈으로
+    let escPressedOnce = false;
+    let escTimer = null;
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            const anyModalOpen = document.querySelector('.modal-overlay.open');
+            if (anyModalOpen) return;
+
+            if (!started && !paused) return;
+
+            if (!paused) {
+                // 게임 중 ESC → 일시정지
+                e.preventDefault();
+                paused = true;
+                document.getElementById('pauseOverlay').classList.add('active');
+                clearTimeout(enemyTimer);
+                clearTimeout(segmentTimer);
+                escPressedOnce = false;
+            } else {
+                // 일시정지 중 ESC → 홈으로
+                e.preventDefault();
+                goHome();
+            }
+        }
+
+        // 일시정지 중 Enter/Space → 2초 카운트다운 후 재개
+        if (paused && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            document.getElementById('pauseOverlay').classList.remove('active');
+            const cd = document.getElementById('countdown');
+            let c = 2;
+            cd.textContent = c;
+            const iv = setInterval(() => {
+                c--;
+                if (c > 0) {
+                    cd.textContent = c;
+                } else {
+                    clearInterval(iv);
+                    cd.textContent = '';
+                    paused = false;
+                    tick();
+                    enemy();
+                    segmentTick();
+                }
+            }, 1000);
+        }
+    });
+
     // ↑ + R → 재시작
     document.addEventListener('keydown', e => {
         pressedKeys.add(e.code);
@@ -282,5 +363,8 @@ function initGameListeners() {
     });
 
     // 시작 버튼
-    document.getElementById('startBtn').addEventListener('click', prep);
+    document.getElementById('startBtn').addEventListener('click', () => {
+        if (typeof unlockAndPlay === 'function') unlockAndPlay();
+        prep();
+    });
 }

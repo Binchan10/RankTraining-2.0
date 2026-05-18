@@ -1,8 +1,7 @@
 // =============================================
-// settings.js — 설정 저장/불러오기 / 배경·색상 제어
+// settings.js — 설정 저장/불러오기 / 모달 / 배경·색상 제어
 // =============================================
 
-/** localStorage 래퍼 (네임스페이스: 'suzren_') */
 const LS = {
     get: (key, def) => {
         const v = localStorage.getItem('suzren_' + key);
@@ -16,18 +15,10 @@ const LS = {
 let currentBgImage = '';
 let gameActive     = false;
 
-/**
- * body에 .game-active 클래스를 조건부 토글하여
- * 게임 중에만 배경 이미지를 표시한다.
- */
 function updateGameBackgroundClass() {
     document.body.classList.toggle('game-active', gameActive && !!currentBgImage);
 }
 
-/**
- * CSS 변수 --bg-image에 url()을 주입하고 상태를 갱신한다.
- * @param {string} url  data-URL 또는 빈 문자열
- */
 function applyBackgroundImage(url) {
     currentBgImage = url || '';
     const value = currentBgImage ? `url("${currentBgImage}")` : 'none';
@@ -35,19 +26,11 @@ function applyBackgroundImage(url) {
     updateGameBackgroundClass();
 }
 
-/**
- * 게임 진행 여부를 알리고 배경 클래스를 갱신한다.
- * @param {boolean} active
- */
 function setGameBackgroundActive(active) {
     gameActive = active;
     updateGameBackgroundClass();
 }
 
-/**
- * 배경 이미지 파일 선택 UI의 상태 문자열을 갱신한다.
- * @param {string} name  파일명 (없으면 빈 문자열)
- */
 function updateBgStatus(name) {
     document.getElementById('bgStatus').textContent =
         name ? '선택됨: ' + name : '선택된 이미지 없음';
@@ -55,10 +38,6 @@ function updateBgStatus(name) {
 
 // ─── 색상 프리셋 ────────────────────────────────────────
 
-/**
- * 선택된 프리셋의 CSS 변수를 :root에 적용한다.
- * @param {string} presetId  COLOR_PRESETS의 키
- */
 function applyColorPreset(presetId) {
     const preset = COLOR_PRESETS[presetId] || COLOR_PRESETS.classic;
     const root   = document.documentElement.style;
@@ -70,29 +49,85 @@ function applyColorPreset(presetId) {
     root.setProperty('--enemy-border',  preset.enemy.border);
 }
 
-// ─── 설정 저장/불러오기 ─────────────────────────────────
+// ─── 프리셋 미리보기 렌더링 ─────────────────────────────
 
-/** 현재 UI 상태를 localStorage에 저장한다. */
-function saveSettings() {
-    LS.set('time',  document.getElementById('time').value);
-    LS.set('speed', document.getElementById('speed').value);
-    LS.set('easy',  document.getElementById('optEasy').checked);
-    LS.set('flip',  document.getElementById('optFlip').checked);
-    LS.set('mute',  document.getElementById('optMute').checked);
-    LS.set('preset', document.getElementById('colorPreset').value);
+const PRESET_NAMES = {
+    classic: '클래식 (Classic)',
+    aurora:  '오로라 (Aurora)',
+    solar:   '솔라 (Solar)',
+    forest:  '포레스트 (Forest)',
+    mono:    '모노 (Mono)'
+};
+
+function renderPresetList(currentPreset) {
+    const container = document.getElementById('presetList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    Object.keys(COLOR_PRESETS).forEach(key => {
+        const preset = COLOR_PRESETS[key];
+        const item = document.createElement('div');
+        item.className = 'preset-item' + (key === currentPreset ? ' active' : '');
+        item.dataset.preset = key;
+
+        const chips = document.createElement('div');
+        chips.className = 'preset-chips';
+
+        const pChip = document.createElement('div');
+        pChip.className = 'preset-chip';
+        pChip.style.background = preset.player.grad;
+        pChip.title = '내 판';
+
+        const eChip = document.createElement('div');
+        eChip.className = 'preset-chip';
+        eChip.style.background = preset.enemy.grad;
+        eChip.title = '상대 판';
+
+        chips.appendChild(pChip);
+        chips.appendChild(eChip);
+
+        const label = document.createElement('span');
+        label.className = 'preset-name';
+        label.textContent = PRESET_NAMES[key];
+
+        item.appendChild(chips);
+        item.appendChild(label);
+
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            LS.set('preset', key);
+            applyColorPreset(key);
+        });
+
+        container.appendChild(item);
+    });
 }
 
-/** localStorage에서 설정을 읽어 UI와 CSS에 반영한다. */
+// ─── 설정 저장/불러오기 ─────────────────────────────────
+
+function saveSettings() {
+    LS.set('time',      document.getElementById('time').value);
+    LS.set('speed',     document.getElementById('speed').value);
+    LS.set('easy',      document.getElementById('optEasy').checked);
+    LS.set('flip',      document.getElementById('optFlip').checked);
+    LS.set('mute',      document.getElementById('optMute').checked);
+    LS.set('hideTimer', document.getElementById('optHideTimer').checked);
+    LS.set('preset', LS.get('preset', 'classic'));
+}
+
 function loadSettings() {
     document.getElementById('time').value  = LS.get('time',  '60');
     document.getElementById('speed').value = LS.get('speed', '1000');
-    document.getElementById('optEasy').checked = LS.get('easy', 'false') === 'true';
-    document.getElementById('optFlip').checked = LS.get('flip', 'false') === 'true';
-    document.getElementById('optMute').checked = LS.get('mute', 'false') === 'true';
+    document.getElementById('optEasy').checked      = LS.get('easy',      'false') === 'true';
+    document.getElementById('optFlip').checked      = LS.get('flip',      'false') === 'true';
+    document.getElementById('optMute').checked      = LS.get('mute',      'false') === 'true';
+    document.getElementById('optHideTimer').checked = LS.get('hideTimer', 'false') === 'true';
+    applyHideTimer(LS.get('hideTimer', 'false') === 'true');
 
     const preset = LS.get('preset', 'classic');
-    document.getElementById('colorPreset').value = preset;
     applyColorPreset(preset);
+    renderPresetList(preset);
 
     const savedBg     = LS.get('bg',     '');
     const savedBgName = LS.get('bgName', '');
@@ -100,59 +135,68 @@ function loadSettings() {
     updateBgStatus(savedBgName);
 }
 
-// ─── 설정 패널 토글 ─────────────────────────────────────
+// ─── 모달 공통 로직 ─────────────────────────────────────
 
-/** 추가 설정 패널(모달)을 열고 닫는다. */
-function initSettingsPanel() {
-    const toggle = document.getElementById('settingsToggle');
-    const overlay = document.getElementById('settingsOverlay');
-    const closeBtn = document.getElementById('settingsClose');
-    if (!toggle || !overlay) return;
+function openModal(overlayId) {
+    document.getElementById(overlayId).classList.add('open');
+}
 
-    const setOpen = (open) => {
-        if (open) {
-            overlay.classList.add('open');
-        } else {
-            overlay.classList.remove('open');
-        }
+function closeModal(overlayId) {
+    document.getElementById(overlayId).classList.remove('open');
+}
+
+function initModals() {
+    // 버튼 → 모달 연결
+    const map = {
+        'btnGameSettings': 'gameSettingsOverlay',
+        'btnCustom':       'customOverlay',
+        'btnShortcuts':    'shortcutsOverlay',
+        'btnRank':         'rankTableOverlay',
+        'btnHof':          'hofOverlay'
     };
 
-    toggle.addEventListener('click', () => setOpen(true));
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => setOpen(false));
-    }
-
-    overlay.addEventListener('click', (e) => {
-        // 모달 바깥 배경 클릭 시 닫기
-        if (e.target === overlay) {
-            setOpen(false);
-        }
+    Object.entries(map).forEach(([btnId, overlayId]) => {
+        const btn = document.getElementById(btnId);
+        if (btn) btn.addEventListener('click', () => openModal(overlayId));
     });
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && overlay.classList.contains('open')) {
-            setOpen(false);
+    // 닫기 버튼
+    document.querySelectorAll('.modal-close-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const overlayId = btn.dataset.close;
+            if (overlayId) closeModal(overlayId);
+        });
+    });
+
+    // 오버레이 바깥 클릭 시 닫기
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) closeModal(overlay.id);
+        });
+    });
+
+    // ESC 키
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.open').forEach(overlay => {
+                closeModal(overlay.id);
+            });
         }
     });
 }
 
 // ─── 이벤트 바인딩 ──────────────────────────────────────
 
-/** 설정 관련 모든 이벤트 리스너를 등록한다. */
 function initSettingsListeners() {
-    // 기본 옵션 변경 → 즉시 저장
-    ['time', 'speed', 'optEasy', 'optFlip', 'optMute'].forEach(id => {
+    ['time', 'speed', 'optEasy', 'optFlip', 'optMute', 'optHideTimer'].forEach(id => {
         document.getElementById(id).addEventListener('change', saveSettings);
     });
 
-    // 색상 프리셋
-    document.getElementById('colorPreset').addEventListener('change', () => {
-        const presetId = document.getElementById('colorPreset').value;
-        LS.set('preset', presetId);
-        applyColorPreset(presetId);
+    // 시간 숨김 실시간 반영
+    document.getElementById('optHideTimer').addEventListener('change', e => {
+        applyHideTimer(e.target.checked);
     });
 
-    // 배경 이미지 업로드
     document.getElementById('bgFile').addEventListener('change', e => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
@@ -168,7 +212,6 @@ function initSettingsListeners() {
         reader.readAsDataURL(file);
     });
 
-    // 배경 이미지 제거
     document.getElementById('bgClear').addEventListener('click', () => {
         LS.set('bg',     '');
         LS.set('bgName', '');
@@ -177,3 +220,163 @@ function initSettingsListeners() {
         document.getElementById('bgFile').value = '';
     });
 }
+
+// ─── 명예의 전당 ─────────────────────────────────────────
+
+function saveHofRecord(hits, isEasy) {
+    const key = isEasy ? 'hof_easy' : 'hof_rank';
+    const speed = document.getElementById('speed').value;
+    let records = [];
+    try { records = JSON.parse(LS.get(key, '[]')); } catch(e) { records = []; }
+    records.push({ hits, rank: getRank(hits), speed, date: new Date().toLocaleDateString('ko-KR') });
+    records.sort((a, b) => b.hits - a.hits);
+    records = records.slice(0, 5);
+    LS.set(key, JSON.stringify(records));
+}
+
+function renderHofList(listId, isEasy) {
+    const key = isEasy ? 'hof_easy' : 'hof_rank';
+    let records = [];
+    try { records = JSON.parse(LS.get(key, '[]')); } catch(e) { records = []; }
+
+    const container = document.getElementById(listId);
+    if (!container) return;
+
+    if (records.length === 0) {
+        container.innerHTML = '<div class="hof-empty">기록 없음</div>';
+        return;
+    }
+
+    container.innerHTML = records.map((r, i) => {
+        const rankClass = 'hof-rank-' + r.rank.replace('+', 'p');
+        return `<div class="hof-row">
+            <span class="hof-num">${i + 1}</span>
+            <span class="hof-rank-badge ${rankClass}">${r.rank}</span>
+            <span class="hof-hits">${r.hits}</span>
+            <span class="hof-speed">(vs ${r.speed || '?'}타)</span>
+            <span class="hof-date">${r.date}</span>
+        </div>`;
+    }).join('');
+}
+
+// ─── 시간 숨김 ──────────────────────────────────────────
+
+function applyHideTimer(hide) {
+    const timer = document.getElementById('timer');
+    const gauge = document.getElementById('timeGaugeWrap');
+    if (timer) timer.style.opacity = hide ? '0' : '';
+    if (gauge) gauge.style.opacity = hide ? '0' : '';
+}
+
+// ─── 음악 UI 인터랙션 ───────────────────────────────────
+
+function initMusicUI() {
+    // 셔플 토글
+    const shuffleBtn = document.getElementById('btnShuffleToggle');
+    if (shuffleBtn) {
+        shuffleBtn.addEventListener('click', () => {
+            const isOrder = shuffleBtn.dataset.mode === 'order';
+            shuffleBtn.dataset.mode = isOrder ? 'shuffle' : 'order';
+            document.getElementById('iconOrder').style.display  = isOrder ? 'none' : '';
+            document.getElementById('iconShuffle').style.display = isOrder ? '' : 'none';
+            shuffleBtn.classList.toggle('active', isOrder);
+        });
+    }
+
+    // 반복 토글
+    const repeatBtn = document.getElementById('btnRepeatToggle');
+    if (repeatBtn) {
+        repeatBtn.addEventListener('click', () => {
+            const isAll = repeatBtn.dataset.mode === 'all';
+            repeatBtn.dataset.mode = isAll ? 'one' : 'all';
+            document.getElementById('iconRepeatAll').style.display = isAll ? 'none' : '';
+            document.getElementById('iconRepeatOne').style.display = isAll ? '' : 'none';
+            repeatBtn.classList.toggle('active', isAll);
+        });
+    }
+
+    // 볼륨 슬라이더 → 음소거 아이콘 전환
+    const volSlider = document.getElementById('musicVolume');
+    const volNormal = document.getElementById('volIconNormal');
+    const volMute   = document.getElementById('volIconMute');
+    const volBtn    = document.getElementById('volIconBtn');
+
+    function updateVolIcon() {
+        const muted = parseInt(volSlider.value) === 0;
+        volNormal.style.display = muted ? 'none' : '';
+        volMute.style.display   = muted ? '' : 'none';
+        volBtn.classList.toggle('muted', muted);
+    }
+
+    if (volSlider) {
+        volSlider.addEventListener('input', updateVolIcon);
+        updateVolIcon();
+    }
+
+    // 볼륨 아이콘 클릭 → 음소거 토글
+    if (volBtn && volSlider) {
+        volBtn.addEventListener('click', () => {
+            if (parseInt(volSlider.value) === 0) {
+                volSlider.value = 70;
+            } else {
+                volSlider.value = 0;
+            }
+            updateVolIcon();
+        });
+    }
+}
+
+// ─── 명예의 전당 모달 전용 렌더링 ───────────────────────
+
+function renderHofModal() {
+    renderHofListModal('hofRankListModal', false);
+    renderHofListModal('hofEasyListModal', true);
+}
+
+function renderHofListModal(listId, isEasy) {
+    const key = isEasy ? 'hof_easy' : 'hof_rank';
+    let records = [];
+    try { records = JSON.parse(LS.get(key, '[]')); } catch(e) { records = []; }
+
+    const container = document.getElementById(listId);
+    if (!container) return;
+
+    if (records.length === 0) {
+        container.innerHTML = '<div class="hof-empty">기록 없음</div>';
+        return;
+    }
+
+    container.innerHTML = records.map((r, i) => {
+        const rankClass = 'hof-rank-' + r.rank.replace('+', 'p');
+        return `<div class="hof-row hof-row--modal">
+            <span class="hof-num">${i + 1}</span>
+            <span class="hof-rank-badge ${rankClass}">${r.rank}</span>
+            <span class="hof-hits">${r.hits}</span>
+            <span class="hof-speed">(vs ${r.speed || '?'}타)</span>
+            <span class="hof-date">${r.date}</span>
+        </div>`;
+    }).join('');
+}
+
+// 트로피 버튼 클릭 시 모달 열고 렌더링
+document.addEventListener('DOMContentLoaded', () => {
+    const hofBtn = document.getElementById('btnHof');
+    if (hofBtn) {
+        hofBtn.addEventListener('click', () => {
+            renderHofModal();
+            openModal('hofOverlay');
+        });
+    }
+
+    // 초기화 버튼
+    const resetBtn = document.getElementById('btnHofReset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (confirm('명예의 전당 기록을 모두 초기화할까요?')) {
+                LS.set('hof_rank', '[]');
+                LS.set('hof_easy', '[]');
+                renderHofModal();
+            }
+        });
+    }
+});

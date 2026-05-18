@@ -43,6 +43,11 @@ function showResult(stats) {
     document.getElementById('scoreDetail').textContent   = `나 ${totalHits}개 VS 상대 ${enemyFlips}개`;
     document.getElementById('accuracyDetail').textContent = `정확도 ${totalHits}/${totalAttempts} (${accuracy}%)`;
 
+    // 명예의 전당 저장 및 렌더링
+    saveHofRecord(totalHits, isEasy);
+    renderHofList('hofRankList', false);
+    renderHofList('hofEasyList', true);
+
     // 결과창 표시 후 차트 그리기
     document.getElementById('result').style.display = 'flex';
     requestAnimationFrame(() => drawChart(segmentHits, segmentDuration));
