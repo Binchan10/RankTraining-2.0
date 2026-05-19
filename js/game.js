@@ -8,6 +8,7 @@
 let tiles         = [];    // { owner, word, rotation, blockedUntil? }
 let started       = false;
 let paused        = false;
+let resuming      = false;   // 재개 카운트다운 진행 중 여부
 
 // 통계
 let totalHits     = 0;
@@ -273,7 +274,8 @@ function restartGame() {
 function initGameListeners() {
     // Enter / Space → 단어 제출
     document.getElementById('input').addEventListener('keydown', e => {
-        if ((e.key === 'Enter' || e.key === ' ') && started) {
+        // 카운트다운 중(resuming)이거나 일시정지 중이면 제출 무시
+        if ((e.key === 'Enter' || e.key === ' ') && started && !paused && !resuming) {
             e.preventDefault();
             const v = e.target.value.trim();
             if (!v) return;
@@ -322,8 +324,10 @@ function initGameListeners() {
         }
 
         // 일시정지 중 Enter/Space → 2초 카운트다운 후 재개
-        if (paused && (e.key === 'Enter' || e.key === ' ')) {
+        // resuming 플래그로 카운트다운 중복 생성 방지
+        if (paused && !resuming && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
+            resuming = true;
             document.getElementById('pauseOverlay').classList.remove('active');
             const cd = document.getElementById('countdown');
             let c = 2;
@@ -336,6 +340,10 @@ function initGameListeners() {
                     clearInterval(iv);
                     cd.textContent = '';
                     paused = false;
+                    resuming = false;
+                    // 기존 타이머 정리 후 재시작 (중복 실행 방지)
+                    clearTimeout(enemyTimer);
+                    clearTimeout(segmentTimer);
                     tick();
                     enemy();
                     segmentTick();

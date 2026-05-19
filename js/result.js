@@ -8,17 +8,21 @@
  * 게임 종료 시 결과창을 채우고 표시한다.
  *
  * @param {object} stats
- * @param {number}   stats.totalHits      누적 정타 수
- * @param {number}   stats.totalMisses    누적 오타 수
- * @param {number}   stats.enemyFlips     적 뒤집기 수
- * @param {number[]} stats.segmentHits    구간별 정타 배열 (길이 10)
+ * @param {number}   stats.totalHits       누적 정타 수
+ * @param {number}   stats.totalMisses     누적 오타 수
+ * @param {number}   stats.enemyFlips      적 뒤집기 수
+ * @param {number[]} stats.segmentHits     구간별 정타 배열 (길이 10)
  * @param {number}   stats.segmentDuration 구간 길이 (초)
- * @param {number[]} stats.tileCounts     [플레이어 타일 수, 적 타일 수]
- * @param {boolean}  stats.isEasy         Easy Mode 여부
+ * @param {number}   stats.totalTime       전체 게임 시간 (초)
+ * @param {number[]} stats.tileCounts      [플레이어 타일 수, 적 타일 수]
+ * @param {boolean}  stats.isEasy          Easy Mode 여부
  */
 function showResult(stats) {
-    const { totalHits, totalMisses, enemyFlips, segmentHits, segmentDuration, tileCounts, isEasy } = stats;
+    const { totalHits, totalMisses, enemyFlips, segmentHits, segmentDuration, totalTime, tileCounts, isEasy } = stats;
     const [pCount, eCount] = tileCounts;
+
+    // 랭크 기준: 1분(60초) 정타 수로 환산 후 반내림
+    const hitsPerMin = Math.floor(totalHits / (totalTime / 60));
 
     // 승패
     let wlText = '무승부', wlColor = '#94a3b8';
@@ -39,12 +43,12 @@ function showResult(stats) {
     // 텍스트 채우기
     document.getElementById('winLoss').textContent  = wlText;
     document.getElementById('winLoss').style.color  = wlColor;
-    document.getElementById('rank').textContent     = getRank(totalHits);
+    document.getElementById('rank').textContent     = getRank(hitsPerMin);
     document.getElementById('scoreDetail').textContent   = `나 ${totalHits}개 VS 상대 ${enemyFlips}개`;
     document.getElementById('accuracyDetail').textContent = `정확도 ${totalHits}/${totalAttempts} (${accuracy}%)`;
 
     // 명예의 전당 저장 및 렌더링
-    saveHofRecord(totalHits, isEasy);
+    saveHofRecord(totalHits, hitsPerMin, totalTime, isEasy);
     renderHofList('hofRankList', false);
     renderHofList('hofEasyList', true);
 
@@ -55,11 +59,6 @@ function showResult(stats) {
 
 // ─── 구간별 정타 차트 ────────────────────────────────────
 
-/**
- * canvas에 구간별 정타 수 꺾은선+면적 차트를 렌더링한다.
- * @param {number[]} data              구간별 정타 배열
- * @param {number}   segmentDuration   구간 길이 (초), X축 레이블에 사용
- */
 function drawChart(data, segmentDuration) {
     const canvas = document.getElementById('chartCanvas');
     const dpr    = window.devicePixelRatio || 1;

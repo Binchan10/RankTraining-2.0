@@ -851,11 +851,17 @@ kbd {
 
 .hof-hits {
     font-size: 14px; font-weight: 600;
-    color: rgba(221,228,240,0.8); flex: 1;
+    color: rgba(221,228,240,0.8);
+}
+
+.hof-speed {
+    font-size: 11px; color: rgba(221,228,240,0.35);
+    white-space: nowrap; min-width: 100px; flex: 1;
 }
 
 .hof-date {
     font-size: 11px; color: rgba(221,228,240,0.3);
+    white-space: nowrap; margin-left: auto;
 }
 
 .hof-empty {
@@ -967,11 +973,17 @@ kbd {
 
 .hof-hits {
     font-size: 16px; font-weight: 600;
-    color: rgba(221,228,240,0.85); flex: 1;
+    color: rgba(221,228,240,0.85);
+}
+
+.hof-speed {
+    font-size: 12px; color: rgba(221,228,240,0.35);
+    white-space: nowrap; min-width: 110px; flex: 1;
 }
 
 .hof-date {
     font-size: 12px; color: rgba(221,228,240,0.3);
+    white-space: nowrap; margin-left: auto;
 }
 
 .hof-empty {
@@ -1149,11 +1161,7 @@ kbd {
 
 .hof-cols { display: none; } /* 이전 가로 배치 숨김 */
 
-.hof-speed {
-    font-size: 12px;
-    color: rgba(221,228,240,0.35);
-    white-space: nowrap;
-}
+/* .hof-speed 는 각 hof-row 블록에서 정의됨 */
 
 /* 음악 UI - 메인 컨트롤 한 줄 */
 .music-main-row {
@@ -1302,14 +1310,20 @@ kbd {
 }
 
 .hof-row {
-    gap: 10px !important;
+    gap: 8px !important;
     padding: 10px 12px !important;
     flex-wrap: nowrap !important;
+}
+
+.hof-speed {
+    min-width: 100px !important;
+    flex: 1 !important;
 }
 
 .hof-date {
     white-space: nowrap !important;
     font-size: 11px !important;
+    margin-left: auto !important;
 }
 
 .hof-hits {
@@ -1425,9 +1439,9 @@ kbd {
 
 .hof-row--modal .hof-num        { font-size: 14px; font-weight: 700; color: rgba(221,228,240,0.3); min-width: 18px; }
 .hof-row--modal .hof-rank-badge { font-size: 17px; font-weight: 800; min-width: 38px; }
-.hof-row--modal .hof-hits       { font-size: 16px; font-weight: 600; color: rgba(221,228,240,0.85); flex: 1; }
-.hof-row--modal .hof-speed      { font-size: 13px; color: rgba(221,228,240,0.35); white-space: nowrap; }
-.hof-row--modal .hof-date       { font-size: 12px; color: rgba(221,228,240,0.3); white-space: nowrap; }
+.hof-row--modal .hof-hits       { font-size: 16px; font-weight: 600; color: rgba(221,228,240,0.85); }
+.hof-row--modal .hof-speed      { font-size: 13px; color: rgba(221,228,240,0.35); white-space: nowrap; min-width: 120px; flex: 1; }
+.hof-row--modal .hof-date       { font-size: 12px; color: rgba(221,228,240,0.3); white-space: nowrap; margin-left: auto; }
 
 .hof-reset-wrap {
     padding: 16px 26px 24px;

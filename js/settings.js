@@ -223,15 +223,35 @@ function initSettingsListeners() {
 
 // ─── 명예의 전당 ─────────────────────────────────────────
 
-function saveHofRecord(hits, isEasy) {
+function saveHofRecord(totalHits, hitsPerMin, totalTime, isEasy) {
     const key = isEasy ? 'hof_easy' : 'hof_rank';
     const speed = document.getElementById('speed').value;
     let records = [];
     try { records = JSON.parse(LS.get(key, '[]')); } catch(e) { records = []; }
-    records.push({ hits, rank: getRank(hits), speed, date: new Date().toLocaleDateString('ko-KR') });
-    records.sort((a, b) => b.hits - a.hits);
+    records.push({
+        hits: totalHits,
+        hitsPerMin,
+        totalTime,
+        rank: getRank(hitsPerMin),
+        speed,
+        date: new Date().toLocaleDateString('ko-KR')
+    });
+    // 분당 환산 기준 내림차순, 동점이면 먼저 세운 기록이 위 (stable sort 활용)
+    records.sort((a, b) => {
+        const aHpm = a.hitsPerMin ?? a.hits; // 구버전 호환
+        const bHpm = b.hitsPerMin ?? b.hits;
+        return bHpm - aHpm;
+    });
     records = records.slice(0, 5);
     LS.set(key, JSON.stringify(records));
+}
+
+
+/** 명전 speed 셀 텍스트 생성: 60초면 (vs N타), 초과면 (vs N타, N초) */
+function hofSpeedLabel(r) {
+    const t = r.totalTime ?? 60; // 구버전 호환
+    if (t === 60) return `(vs ${r.speed || '?'}타)`;
+    return `(vs ${r.speed || '?'}타, ${t}초)`;
 }
 
 function renderHofList(listId, isEasy) {
@@ -253,7 +273,7 @@ function renderHofList(listId, isEasy) {
             <span class="hof-num">${i + 1}</span>
             <span class="hof-rank-badge ${rankClass}">${r.rank}</span>
             <span class="hof-hits">${r.hits}</span>
-            <span class="hof-speed">(vs ${r.speed || '?'}타)</span>
+            <span class="hof-speed">${hofSpeedLabel(r)}</span>
             <span class="hof-date">${r.date}</span>
         </div>`;
     }).join('');
@@ -352,7 +372,7 @@ function renderHofListModal(listId, isEasy) {
             <span class="hof-num">${i + 1}</span>
             <span class="hof-rank-badge ${rankClass}">${r.rank}</span>
             <span class="hof-hits">${r.hits}</span>
-            <span class="hof-speed">(vs ${r.speed || '?'}타)</span>
+            <span class="hof-speed">${hofSpeedLabel(r)}</span>
             <span class="hof-date">${r.date}</span>
         </div>`;
     }).join('');
