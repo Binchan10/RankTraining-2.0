@@ -216,6 +216,7 @@ function end() {
         enemyFlips,
         segmentHits,
         segmentDuration,
+        totalTime,
         tileCounts: [
             tiles.filter(t => t.owner === 'player').length,
             tiles.filter(t => t.owner === 'enemy').length
