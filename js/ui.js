@@ -41,8 +41,9 @@ function renderAll(showText = true) {
 function updateTimerDisplay(timeLeft) {
     const el = document.getElementById('timer');
     el.textContent = '남은 시간: ' + timeLeft + '초';
-    if (timeLeft <= 10) el.classList.add('danger');
-    else                el.classList.remove('danger');
+    const isHidden = document.getElementById('optHideTimer')?.checked;
+    if (timeLeft <= 10 && !isHidden) el.classList.add('danger');
+    else                             el.classList.remove('danger');
 }
 
 // ─── 시간 게이지 ────────────────────────────────────────
