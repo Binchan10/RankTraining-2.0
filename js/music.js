@@ -78,10 +78,90 @@ let checkedTracks = (() => {
     catch { return TRACKS.map(() => true); }
 })();
 
+// ─── 내 음악 (로컬 업로드) ──────────────────────────────
+
+// activePlaylist: 'default' | 'local'
+let activePlaylist = MLS.get('activePlaylist', 'default');
+
+// 로컬 트랙 목록 (IndexedDB에서 불러온 { id, name, objectUrl } 배열)
+let localTracks = [];
+let checkedLocalTracks = [];
+
+// 현재 재생 중인 로컬 트랙 인덱스 (-1이면 없음)
+let currentLocalIndex = -1;
+
+// ─── IndexedDB 초기화 ───────────────────────────────────
+
+let db = null;
+
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('SuzrenMusicDB', 1);
+        req.onupgradeneeded = e => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('tracks')) {
+                d.createObjectStore('tracks', { keyPath: 'id', autoIncrement: true });
+            }
+        };
+        req.onsuccess = e => { db = e.target.result; resolve(); };
+        req.onerror   = () => reject(req.error);
+    });
+}
+
+function dbGetAll() {
+    return new Promise((resolve, reject) => {
+        const tx  = db.transaction('tracks', 'readonly');
+        const req = tx.objectStore('tracks').getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror   = () => reject(req.error);
+    });
+}
+
+function dbAdd(name, blob) {
+    return new Promise((resolve, reject) => {
+        const tx  = db.transaction('tracks', 'readwrite');
+        const req = tx.objectStore('tracks').add({ name, blob });
+        req.onsuccess = () => resolve(req.result); // 새 id 반환
+        req.onerror   = () => reject(req.error);
+    });
+}
+
+function dbDelete(id) {
+    return new Promise((resolve, reject) => {
+        const tx  = db.transaction('tracks', 'readwrite');
+        const req = tx.objectStore('tracks').delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror   = () => reject(req.error);
+    });
+}
+
+// ─── 로컬 트랙 불러오기 ─────────────────────────────────
+
+async function loadLocalTracks() {
+    if (!db) return;
+    const rows = await dbGetAll();
+    // 기존 objectUrl 해제
+    localTracks.forEach(t => { if (t.objectUrl) URL.revokeObjectURL(t.objectUrl); });
+    localTracks = rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        objectUrl: URL.createObjectURL(row.blob),
+        gain: 1.0
+    }));
+    // 체크 상태 복원
+    const saved = (() => {
+        try { return JSON.parse(MLS.get('checkedLocal', 'null')); } catch { return null; }
+    })();
+    checkedLocalTracks = localTracks.map((_, i) => saved ? (saved[i] !== false) : true);
+}
+
 // ─── 재생 목록 ──────────────────────────────────────────
 
 function getPlaylist() {
-    return TRACKS.map((t, i) => i).filter(i => checkedTracks[i]);
+    if (activePlaylist === 'local') {
+        return localTracks.map((_, i) => i).filter(i => checkedLocalTracks[i]);
+    }
+    return TRACKS.map((_, i) => i).filter(i => checkedTracks[i]);
 }
 
 function getNextIndex(current) {
@@ -104,18 +184,33 @@ function getPrevIndex(current) {
 // ─── 재생 ───────────────────────────────────────────────
 
 function playTrack(index) {
-    if (index < 0 || index >= TRACKS.length) return;
-    currentIndex = index;
-    const t = TRACKS[index];
-    audio.src = 'music/' + t.file;
-    audio.volume = Math.min(1, volume * t.gain);
-    audio.play().catch(() => {});
-    isPlaying = true;
-    MLS.set('playing', 'true');
-    MLS.set('lastIndex', index);
+    if (activePlaylist === 'local') {
+        if (index < 0 || index >= localTracks.length) return;
+        currentLocalIndex = index;
+        currentIndex = -1;
+        const t = localTracks[index];
+        audio.src = t.objectUrl;
+        audio.volume = Math.min(1, volume * t.gain);
+        audio.play().catch(() => {});
+        isPlaying = true;
+        MLS.set('playing', 'true');
+        MLS.set('lastLocalIndex', index);
+    } else {
+        if (index < 0 || index >= TRACKS.length) return;
+        currentIndex = index;
+        currentLocalIndex = -1;
+        const t = TRACKS[index];
+        audio.src = 'music/' + t.file;
+        audio.volume = Math.min(1, volume * t.gain);
+        audio.play().catch(() => {});
+        isPlaying = true;
+        MLS.set('playing', 'true');
+        MLS.set('lastIndex', index);
+    }
     updateNowPlaying();
     updatePlayBtn();
     updateTrackList();
+    updateLocalTrackList();
 }
 
 function togglePlay() {
@@ -125,7 +220,7 @@ function togglePlay() {
         isPlaying = false;
         MLS.set('playing', 'false');
     } else {
-        if (currentIndex < 0) {
+        if (activePlaylist === 'local' ? currentLocalIndex < 0 : currentIndex < 0) {
             const pl = getPlaylist();
             if (pl.length) playTrack(pl[0]);
             return;
@@ -138,41 +233,94 @@ function togglePlay() {
 }
 
 function playNext() {
-    const next = getNextIndex(currentIndex);
+    const idx = activePlaylist === 'local' ? currentLocalIndex : currentIndex;
+    const next = getNextIndex(idx);
     if (next >= 0) playTrack(next);
 }
 
 function playPrev() {
     if (audio.currentTime > 3) { audio.currentTime = 0; return; }
-    const prev = getPrevIndex(currentIndex);
+    const idx = activePlaylist === 'local' ? currentLocalIndex : currentIndex;
+    const prev = getPrevIndex(idx);
     if (prev >= 0) playTrack(prev);
 }
 
-// 자동 다음 곡
 audio.addEventListener('ended', () => {
     if (repeatMode === 'one') { audio.play(); return; }
     playNext();
 });
 
-// ─── 브라우저 잠금 해제 (수련 시작 버튼에서 호출) ────────
+// ─── 브라우저 잠금 해제 ─────────────────────────────────
 
 function unlockAndPlay() {
     if (audioUnlocked) return;
     audioUnlocked = true;
     const shouldPlay = MLS.get('playing', 'true') === 'true';
     if (!shouldPlay) return;
-    const pl = getPlaylist();
-    if (!pl.length) return;
-    const last = parseInt(MLS.get('lastIndex', '-1'));
-    const startIdx = pl.includes(last) ? last : pl[0];
-    playTrack(startIdx);
+
+    if (activePlaylist === 'local') {
+        const pl = getPlaylist();
+        if (!pl.length) return;
+        const last = parseInt(MLS.get('lastLocalIndex', '-1'));
+        playTrack(pl.includes(last) ? last : pl[0]);
+    } else {
+        const pl = getPlaylist();
+        if (!pl.length) return;
+        const last = parseInt(MLS.get('lastIndex', '-1'));
+        playTrack(pl.includes(last) ? last : pl[0]);
+    }
+}
+
+// ─── 플레이리스트 전환 ──────────────────────────────────
+
+function switchPlaylist(target) {
+    if (target === activePlaylist) return;
+    audio.pause();
+    isPlaying = false;
+    currentIndex = -1;
+    currentLocalIndex = -1;
+    activePlaylist = target;
+    MLS.set('activePlaylist', target);
+    MLS.set('playing', 'false');
+    updateNowPlaying();
+    updatePlayBtn();
+    updatePlaylistHeaders();
+    updateTrackList();
+    updateLocalTrackList();
+}
+
+function updatePlaylistHeaders() {
+    const defHeader   = document.getElementById('trackListToggle');
+    const localHeader = document.getElementById('localTrackListToggle');
+    const radioDefault = document.getElementById('radioDefault');
+    const radioLocal   = document.getElementById('radioLocal');
+    if (!defHeader || !localHeader) return;
+
+    if (activePlaylist === 'default') {
+        defHeader.classList.add('playlist-active');
+        localHeader.classList.remove('playlist-active');
+        radioDefault?.classList.add('selected');
+        radioLocal?.classList.remove('selected');
+    } else {
+        defHeader.classList.remove('playlist-active');
+        localHeader.classList.add('playlist-active');
+        radioDefault?.classList.remove('selected');
+        radioLocal?.classList.add('selected');
+    }
 }
 
 // ─── UI 업데이트 ────────────────────────────────────────
 
 function updateNowPlaying() {
     const el = document.getElementById('musicTitle');
-    if (el) el.textContent = currentIndex >= 0 ? TRACKS[currentIndex].name : '— 음악 없음 —';
+    if (!el) return;
+    if (activePlaylist === 'local' && currentLocalIndex >= 0) {
+        el.textContent = localTracks[currentLocalIndex].name;
+    } else if (activePlaylist === 'default' && currentIndex >= 0) {
+        el.textContent = TRACKS[currentIndex].name;
+    } else {
+        el.textContent = '— 음악 없음 —';
+    }
 }
 
 function updatePlayBtn() {
@@ -184,8 +332,14 @@ function updatePlayBtn() {
 }
 
 function updateTrackList() {
-    document.querySelectorAll('.track-item').forEach((el, i) => {
-        el.classList.toggle('playing', i === currentIndex);
+    document.querySelectorAll('#trackList .track-item').forEach((el, i) => {
+        el.classList.toggle('playing', activePlaylist === 'default' && i === currentIndex);
+    });
+}
+
+function updateLocalTrackList() {
+    document.querySelectorAll('#localTrackList .track-item').forEach((el, i) => {
+        el.classList.toggle('playing', activePlaylist === 'local' && i === currentLocalIndex);
     });
 }
 
@@ -218,7 +372,7 @@ function updateVolIcon() {
     if (btn) btn.classList.toggle('muted', muted);
 }
 
-// ─── 곡 목록 렌더링 ─────────────────────────────────────
+// ─── 기본 곡 목록 렌더링 ────────────────────────────────
 
 function renderTrackList() {
     const container = document.getElementById('trackList');
@@ -229,7 +383,7 @@ function renderTrackList() {
     if (header) header.textContent = `곡 목록 (${checkedCount}/${TRACKS.length})`;
 
     container.innerHTML = TRACKS.map((t, i) => `
-        <div class="track-item ${i === currentIndex ? 'playing' : ''}" data-index="${i}">
+        <div class="track-item ${activePlaylist === 'default' && i === currentIndex ? 'playing' : ''}" data-index="${i}">
             <label class="track-check">
                 <input type="checkbox" class="track-checkbox" data-index="${i}" ${checkedTracks[i] ? 'checked' : ''}>
                 <span class="track-checkmark"></span>
@@ -239,80 +393,229 @@ function renderTrackList() {
         </div>
     `).join('');
 
-    // 체크박스 이벤트
     container.querySelectorAll('.track-checkbox').forEach(cb => {
         cb.addEventListener('change', e => {
             const idx = parseInt(e.target.dataset.index);
             checkedTracks[idx] = e.target.checked;
             MLS.set('checked', JSON.stringify(checkedTracks));
-            const header = document.getElementById('trackListHeader');
-            if (header) header.textContent = `곡 목록 (${checkedTracks.filter(Boolean).length}/${TRACKS.length})`;
+            const h = document.getElementById('trackListHeader');
+            if (h) h.textContent = `곡 목록 (${checkedTracks.filter(Boolean).length}/${TRACKS.length})`;
         });
     });
 
-    // 즉시 재생 버튼
     container.querySelectorAll('.track-play-btn').forEach(btn => {
         btn.addEventListener('click', e => {
-            if (!audioUnlocked) { audioUnlocked = true; }
-            const idx = parseInt(e.currentTarget.dataset.index);
-            playTrack(idx);
+            if (activePlaylist !== 'default') switchPlaylist('default');
+            if (!audioUnlocked) audioUnlocked = true;
+            playTrack(parseInt(e.currentTarget.dataset.index));
             isPlaying = true;
             MLS.set('playing', 'true');
         });
     });
 }
 
+// ─── 내 음악 목록 렌더링 ────────────────────────────────
+
+function renderLocalTrackList() {
+    const container = document.getElementById('localTrackList');
+    if (!container) return;
+
+    const checkedCount = checkedLocalTracks.filter(Boolean).length;
+    const header = document.getElementById('localTrackListHeader');
+    if (header) header.textContent = `내 음악 (${checkedCount}/${localTracks.length})`;
+
+    if (localTracks.length === 0) {
+        container.innerHTML = '<div class="track-empty">추가된 음악이 없어요</div>';
+        return;
+    }
+
+    container.innerHTML = localTracks.map((t, i) => `
+        <div class="track-item ${activePlaylist === 'local' && i === currentLocalIndex ? 'playing' : ''}" data-index="${i}">
+            <label class="track-check">
+                <input type="checkbox" class="track-checkbox local-track-checkbox" data-index="${i}" ${checkedLocalTracks[i] ? 'checked' : ''}>
+                <span class="track-checkmark"></span>
+            </label>
+            <span class="track-name">${t.name}</span>
+            <button class="track-play-btn" data-index="${i}" title="바로 재생">▶</button>
+            <button class="track-delete-btn" data-id="${t.id}" data-index="${i}" title="삭제">✕</button>
+        </div>
+    `).join('');
+
+    container.querySelectorAll('.local-track-checkbox').forEach(cb => {
+        cb.addEventListener('change', e => {
+            const idx = parseInt(e.target.dataset.index);
+            checkedLocalTracks[idx] = e.target.checked;
+            MLS.set('checkedLocal', JSON.stringify(checkedLocalTracks));
+            const h = document.getElementById('localTrackListHeader');
+            if (h) h.textContent = `내 음악 (${checkedLocalTracks.filter(Boolean).length}/${localTracks.length})`;
+        });
+    });
+
+    container.querySelectorAll('.track-play-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            if (activePlaylist !== 'local') switchPlaylist('local');
+            if (!audioUnlocked) audioUnlocked = true;
+            playTrack(parseInt(e.currentTarget.dataset.index));
+            isPlaying = true;
+            MLS.set('playing', 'true');
+        });
+    });
+
+    container.querySelectorAll('.track-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+            const id  = parseInt(e.currentTarget.dataset.id);
+            const idx = parseInt(e.currentTarget.dataset.index);
+            // 현재 재생 중인 곡이면 정지
+            if (activePlaylist === 'local' && currentLocalIndex === idx) {
+                audio.pause(); isPlaying = false; currentLocalIndex = -1;
+                updateNowPlaying(); updatePlayBtn();
+            }
+            await dbDelete(id);
+            await loadLocalTracks();
+            renderLocalTrackList();
+            updateLocalTrackListHeader();
+        });
+    });
+}
+
+function updateLocalTrackListHeader() {
+    const header = document.getElementById('localTrackListHeader');
+    if (header) header.textContent = `내 음악 (${checkedLocalTracks.filter(Boolean).length}/${localTracks.length})`;
+}
+
 // ─── 아코디언 토글 ──────────────────────────────────────
+
+function closeAccordion(bodyId, toggleId) {
+    const body = document.getElementById(bodyId);
+    const btn  = document.getElementById(toggleId);
+    if (!body || !btn) return;
+    body.classList.remove('open');
+    const arrow = btn.querySelector('.accordion-arrow');
+    if (arrow) arrow.textContent = '▼';
+}
 
 function initTrackListToggle() {
     const toggleBtn = document.getElementById('trackListToggle');
     const body      = document.getElementById('trackListBody');
     if (!toggleBtn || !body) return;
 
-    toggleBtn.addEventListener('click', () => {
-        const isOpen = body.classList.toggle('open');
-        toggleBtn.querySelector('.accordion-arrow').textContent = isOpen ? '▲' : '▼';
-        if (isOpen) renderTrackList();
+    toggleBtn.addEventListener('click', e => {
+        const arrow = toggleBtn.querySelector('.accordion-arrow');
+        const arrowRect = arrow?.getBoundingClientRect();
+        // 화살표 부근(오른쪽 32px) 클릭이면 아코디언만
+        if (arrowRect && e.clientX >= arrowRect.left - 10) {
+            closeAccordion('localTrackListBody', 'localTrackListToggle');
+            const isOpen = body.classList.toggle('open');
+            arrow.textContent = isOpen ? '▲' : '▼';
+            if (isOpen) renderTrackList();
+        } else {
+            // 나머지 영역 클릭 → 플리 전환만
+            if (activePlaylist !== 'default') switchPlaylist('default');
+        }
+    });
+}
+
+function initLocalTrackListToggle() {
+    const toggleBtn = document.getElementById('localTrackListToggle');
+    const body      = document.getElementById('localTrackListBody');
+    if (!toggleBtn || !body) return;
+
+    toggleBtn.addEventListener('click', e => {
+        const arrow = toggleBtn.querySelector('.accordion-arrow');
+        const arrowRect = arrow?.getBoundingClientRect();
+        // 화살표 부근(오른쪽 32px) 클릭이면 아코디언만
+        if (arrowRect && e.clientX >= arrowRect.left - 10) {
+            closeAccordion('trackListBody', 'trackListToggle');
+            const isOpen = body.classList.toggle('open');
+            arrow.textContent = isOpen ? '▲' : '▼';
+            if (isOpen) renderLocalTrackList();
+        } else {
+            // 나머지 영역 클릭 → 플리 전환만
+            if (activePlaylist !== 'local') switchPlaylist('local');
+        }
+    });
+}
+
+// ─── 음악 파일 업로드 ───────────────────────────────────
+
+function initLocalMusicUpload() {
+    const input = document.getElementById('localMusicFile');
+    if (!input) return;
+
+    input.addEventListener('change', async e => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        for (const file of files) {
+            const name = file.name.replace(/\.[^.]+$/, ''); // 확장자 제거
+            await dbAdd(name, file);
+        }
+        input.value = '';
+        await loadLocalTracks();
+        renderLocalTrackList();
+        updateLocalTrackListHeader();
+
+        // 목록 열기
+        const body = document.getElementById('localTrackListBody');
+        const btn  = document.getElementById('localTrackListToggle');
+        if (body && !body.classList.contains('open')) {
+            body.classList.add('open');
+            btn?.querySelector('.accordion-arrow') && (btn.querySelector('.accordion-arrow').textContent = '▲');
+            renderLocalTrackList();
+        }
     });
 }
 
 // ─── 전체 초기화 ────────────────────────────────────────
 
-function initMusicUI() {
-    // 볼륨 슬라이더 초기값
+async function initMusicUI() {
+    // IndexedDB 초기화 및 로컬 트랙 불러오기
+    await initDB();
+    await loadLocalTracks();
+
+    // 볼륨 슬라이더
     const volSlider = document.getElementById('musicVolume');
     if (volSlider) {
         volSlider.value = Math.round(volume * 100);
         volSlider.addEventListener('input', e => {
             volume = parseInt(e.target.value) / 100;
             MLS.set('volume', volume);
-            if (currentIndex >= 0) audio.volume = Math.min(1, volume * TRACKS[currentIndex].gain);
+            const idx = activePlaylist === 'local' ? currentLocalIndex : currentIndex;
+            if (idx >= 0) {
+                const gain = activePlaylist === 'local' ? localTracks[idx].gain : TRACKS[idx].gain;
+                audio.volume = Math.min(1, volume * gain);
+            }
             updateVolIcon();
         });
     }
 
-    // 재생/정지
-    document.getElementById('musicPlay')?.addEventListener('click', togglePlay);
-
-    // 이전/다음
+    document.getElementById('musicPlay')?.addEventListener('click', () => {
+        if (!audioUnlocked) {
+            audioUnlocked = true;
+            const pl = getPlaylist();
+            if (!pl.length) return;
+            const lastKey = activePlaylist === 'local' ? 'lastLocalIndex' : 'lastIndex';
+            const last = parseInt(MLS.get(lastKey, '-1'));
+            playTrack(pl.includes(last) ? last : pl[0]);
+            return;
+        }
+        togglePlay();
+    });
     document.getElementById('musicPrev')?.addEventListener('click', playPrev);
     document.getElementById('musicNext')?.addEventListener('click', playNext);
 
-    // 셔플 토글
     document.getElementById('btnShuffleToggle')?.addEventListener('click', () => {
         isShuffle = !isShuffle;
         MLS.set('shuffle', isShuffle);
         updateShuffleBtn();
     });
 
-    // 반복 토글
     document.getElementById('btnRepeatToggle')?.addEventListener('click', () => {
         repeatMode = repeatMode === 'all' ? 'one' : 'all';
         MLS.set('repeat', repeatMode);
         updateRepeatBtn();
     });
 
-    // 볼륨 아이콘 클릭 → 음소거 토글
     document.getElementById('volIconBtn')?.addEventListener('click', () => {
         if (parseInt(volSlider?.value) === 0) {
             volSlider.value = 70; volume = 0.7;
@@ -320,17 +623,23 @@ function initMusicUI() {
             volSlider.value = 0; volume = 0;
         }
         MLS.set('volume', volume);
-        if (currentIndex >= 0) audio.volume = Math.min(1, volume * TRACKS[currentIndex].gain);
+        const idx = activePlaylist === 'local' ? currentLocalIndex : currentIndex;
+        if (idx >= 0) {
+            const gain = activePlaylist === 'local' ? localTracks[idx].gain : TRACKS[idx].gain;
+            audio.volume = Math.min(1, volume * gain);
+        }
         updateVolIcon();
     });
 
-    // 아코디언
     initTrackListToggle();
+    initLocalTrackListToggle();
+    initLocalMusicUpload();
 
-    // 초기 UI 상태
     updateShuffleBtn();
     updateRepeatBtn();
     updateVolIcon();
     updateNowPlaying();
     updatePlayBtn();
+    updatePlaylistHeaders();
+    updateLocalTrackListHeader();
 }

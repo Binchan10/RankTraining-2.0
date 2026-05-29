@@ -19,8 +19,9 @@ let enemyFlips    = 0;
 let timeLeft      = 0;
 let totalTime     = 0;
 
-// 구간별 정타
+// 구간별 정타 / 오타
 let segmentHits     = [];
+let segmentMisses   = [];
 let segmentDuration = 0;
 let segmentIndex    = 0;
 
@@ -166,6 +167,7 @@ function prep() {
     totalTime     = parseInt(document.getElementById('time').value);
     segmentDuration = totalTime / 10;
     segmentHits   = new Array(10).fill(0);
+    segmentMisses = new Array(10).fill(0);
     segmentIndex  = 0;
     timeLeft      = totalTime;
 
@@ -215,6 +217,7 @@ function end() {
         totalMisses,
         enemyFlips,
         segmentHits,
+        segmentMisses,
         segmentDuration,
         totalTime,
         tileCounts: [
@@ -290,6 +293,7 @@ function initGameListeners() {
                 updateLiveCount(totalHits);
             } else {
                 totalMisses++;
+                segmentMisses[segmentIndex]++;
                 const inp = document.getElementById('input');
                 inp.classList.add('error');
                 setTimeout(() => inp.classList.remove('error'), 300);

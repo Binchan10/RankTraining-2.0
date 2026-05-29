@@ -14,6 +14,49 @@ const LS = {
 
 let currentBgImage = '';
 let gameActive     = false;
+let bgDB           = null;
+
+// IndexedDB 초기화
+function initBgDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('SuzrenBgDB', 1);
+        req.onupgradeneeded = e => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains('bg')) {
+                d.createObjectStore('bg', { keyPath: 'id' });
+            }
+        };
+        req.onsuccess = e => { bgDB = e.target.result; resolve(); };
+        req.onerror   = () => reject(req.error);
+    });
+}
+
+function bgDBSave(blob, name) {
+    return new Promise((resolve, reject) => {
+        const tx  = bgDB.transaction('bg', 'readwrite');
+        const req = tx.objectStore('bg').put({ id: 'current', blob, name });
+        req.onsuccess = () => resolve();
+        req.onerror   = () => reject(req.error);
+    });
+}
+
+function bgDBLoad() {
+    return new Promise((resolve, reject) => {
+        const tx  = bgDB.transaction('bg', 'readonly');
+        const req = tx.objectStore('bg').get('current');
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror   = () => reject(req.error);
+    });
+}
+
+function bgDBClear() {
+    return new Promise((resolve, reject) => {
+        const tx  = bgDB.transaction('bg', 'readwrite');
+        const req = tx.objectStore('bg').delete('current');
+        req.onsuccess = () => resolve();
+        req.onerror   = () => reject(req.error);
+    });
+}
 
 function updateGameBackgroundClass() {
     document.body.classList.toggle('game-active', gameActive && !!currentBgImage);
@@ -129,10 +172,14 @@ function loadSettings() {
     applyColorPreset(preset);
     renderPresetList(preset);
 
-    const savedBg     = LS.get('bg',     '');
-    const savedBgName = LS.get('bgName', '');
-    applyBackgroundImage(savedBg);
-    updateBgStatus(savedBgName);
+    // 배경이미지는 IndexedDB에서 비동기로 불러옴
+    initBgDB().then(() => bgDBLoad()).then(row => {
+        if (row && row.blob) {
+            const url = URL.createObjectURL(row.blob);
+            applyBackgroundImage(url);
+            updateBgStatus(row.name || '이미지');
+        }
+    }).catch(() => {});
 }
 
 // ─── 모달 공통 로직 ─────────────────────────────────────
@@ -197,24 +244,20 @@ function initSettingsListeners() {
         applyHideTimer(e.target.checked);
     });
 
-    document.getElementById('bgFile').addEventListener('change', e => {
+    document.getElementById('bgFile').addEventListener('change', async e => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-            const dataUrl = reader.result;
-            LS.set('bg',     dataUrl);
-            LS.set('bgName', file.name || '이미지');
-            applyBackgroundImage(dataUrl);
-            updateBgStatus(file.name || '이미지');
-            if (gameActive) updateGameBackgroundClass();
-        };
-        reader.readAsDataURL(file);
+        if (!bgDB) await initBgDB();
+        await bgDBSave(file, file.name || '이미지');
+        const url = URL.createObjectURL(file);
+        applyBackgroundImage(url);
+        updateBgStatus(file.name || '이미지');
+        if (gameActive) updateGameBackgroundClass();
     });
 
-    document.getElementById('bgClear').addEventListener('click', () => {
-        LS.set('bg',     '');
-        LS.set('bgName', '');
+    document.getElementById('bgClear').addEventListener('click', async () => {
+        if (!bgDB) await initBgDB();
+        await bgDBClear();
         applyBackgroundImage('');
         updateBgStatus('');
         document.getElementById('bgFile').value = '';

@@ -114,131 +114,153 @@
     </div>
 
     <!-- ─── 커스텀 모달 ───────────────────────────────── -->
-    <div id="customOverlay" class="modal-overlay">
-        <div class="modal-box modal-box--wide">
+    <!-- ─── 커스텀 모달 ───────────────────────────────── -->
+    <div id="customOverlay" class="modal-overlay custom-dual-overlay">
+
+        <!-- 왼쪽 패널: 시각 -->
+        <div class="modal-box custom-panel">
             <div class="modal-header">
-                <h2>커스텀</h2>
+                <h2>화면</h2>
                 <button class="modal-close-btn" data-close="customOverlay" aria-label="닫기">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
                 </button>
             </div>
-            <div class="modal-body modal-body--columns">
-                <!-- 왼쪽: 시각 -->
-                <div class="custom-col">
-                    <div class="setting-item-v2">
-                        <label class="setting-label" for="colorPreset">판 색상 프리셋</label>
-                        <div class="preset-list" id="presetList"></div>
-                    </div>
-                    <div class="setting-item-v2" style="margin-top:18px;">
-                        <div class="setting-label">배경 이미지</div>
-                        <div class="setting-row-v2">
-                            <label for="bgFile" class="file-upload-btn">이미지 선택</label>
-                            <input type="file" id="bgFile" accept="image/*" style="display:none;">
-                            <button type="button" id="bgClear" class="danger-btn">제거</button>
-                        </div>
-                        <div id="bgStatus" class="setting-help">선택된 이미지 없음</div>
-                    </div>
+            <div class="modal-body">
+                <div class="setting-item-v2">
+                    <label class="setting-label" for="colorPreset">판 색상 프리셋</label>
+                    <div class="preset-list" id="presetList"></div>
                 </div>
-                <!-- 오른쪽: 음악 -->
-                <div class="custom-col">
-                    <div class="music-player">
-                        <!-- NOW PLAYING -->
-                        <div class="music-now-playing">
-                            <div class="music-label">NOW PLAYING</div>
-                            <div class="music-title" id="musicTitle">— 음악 없음 —</div>
-                        </div>
-                        <!-- 컨트롤 + 옵션 한 줄 -->
-                        <div class="music-main-row">
-                            <!-- 이전/재생중지/다음 -->
-                            <div class="music-controls">
-                                <button class="music-btn" id="musicPrev" title="이전 곡">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                        <path d="M6 6h2v12H6V6zm2.5 6L18 18V6L8.5 12z"/>
-                                    </svg>
-                                </button>
-                                <button class="music-btn music-btn--play" id="musicPlay" title="재생/정지">
-                                    <svg id="iconPlay" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
-                                        <path d="M8 5v14l11-7z"/>
-                                    </svg>
-                                    <svg id="iconPause" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" style="display:none">
-                                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                                    </svg>
-                                </button>
-                                <button class="music-btn" id="musicNext" title="다음 곡">
-                                    <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                        <path d="M6 18l8.5-6L6 6v12zm8.5-6L6 6v12l8.5-6zM16 6h2v12h-2V6z"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <!-- 셔플 + 반복 토글 버튼 -->
-                            <div class="music-mode-btns">
-                                <!-- 순서/셔플 토글 -->
-                                <button class="music-mode-btn" id="btnShuffleToggle" title="순서 / 셔플" data-mode="order">
-                                    <!-- 순서: 순환 화살표 -->
-                                    <svg id="iconOrder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
-                                        <polyline points="17 1 21 5 17 9"/>
-                                        <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-                                        <polyline points="7 23 3 19 7 15"/>
-                                        <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-                                    </svg>
-                                    <!-- 셔플: 주사위 -->
-                                    <svg id="iconShuffle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display:none">
-                                        <rect x="3" y="3" width="18" height="18" rx="3"/>
-                                        <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/>
-                                        <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/>
-                                        <circle cx="8.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/>
-                                        <circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/>
-                                        <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
-                                    </svg>
-                                </button>
-                                <!-- 전체/한곡 반복 토글 -->
-                                <button class="music-mode-btn" id="btnRepeatToggle" title="전체 반복 / 한 곡 반복" data-mode="all">
-                                    <span id="iconRepeatAll" style="font-size:15px; font-weight:800; letter-spacing:-0.5px;">A</span>
-                                    <span id="iconRepeatOne" style="font-size:15px; font-weight:800; display:none;">1</span>
-                                </button>
-                            </div>
-                        </div>
-                        <!-- 볼륨 슬라이더 -->
-                        <div class="music-volume">
-                            <button class="music-vol-icon" id="volIconBtn" title="음소거 토글">
-                                <!-- 기본: 작은 스피커 -->
-                                <svg id="volIconNormal" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                                    <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>
-                                </svg>
-                                <!-- 음소거 -->
-                                <svg id="volIconMute" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="display:none">
-                                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                <div class="setting-item-v2" style="margin-top:18px;">
+                    <div class="setting-label">배경 이미지</div>
+                    <div class="setting-row-v2">
+                        <label for="bgFile" class="file-upload-btn">이미지 선택</label>
+                        <input type="file" id="bgFile" accept="image/*" style="display:none;">
+                        <button type="button" id="bgClear" class="danger-btn">제거</button>
+                    </div>
+                    <div id="bgStatus" class="setting-help">선택된 이미지 없음</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 패널: 음악 -->
+        <div class="modal-box custom-panel">
+            <div class="modal-header">
+                <h2>음악</h2>
+                <button class="modal-close-btn" data-close="customOverlay" aria-label="닫기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="music-player">
+                    <!-- NOW PLAYING -->
+                    <div class="music-now-playing">
+                        <div class="music-label">NOW PLAYING</div>
+                        <div class="music-title" id="musicTitle">— 음악 없음 —</div>
+                    </div>
+                    <!-- 컨트롤 + 옵션 한 줄 -->
+                    <div class="music-main-row">
+                        <div class="music-controls">
+                            <button class="music-btn" id="musicPrev" title="이전 곡">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                    <path d="M6 6h2v12H6V6zm2.5 6L18 18V6L8.5 12z"/>
                                 </svg>
                             </button>
-                            <input type="range" id="musicVolume" class="volume-slider" min="0" max="100" value="70">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="opacity:0.4; flex-shrink:0">
-                                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                            <button class="music-btn music-btn--play" id="musicPlay" title="재생/정지">
+                                <svg id="iconPlay" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                <svg id="iconPause" viewBox="0 0 24 24" fill="currentColor" width="22" height="22" style="display:none">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                                </svg>
+                            </button>
+                            <button class="music-btn" id="musicNext" title="다음 곡">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                    <path d="M6 18l8.5-6L6 6v12zm8.5-6L6 6v12l8.5-6zM16 6h2v12h-2V6z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="music-mode-btns">
+                            <button class="music-mode-btn" id="btnShuffleToggle" title="순서 / 셔플" data-mode="order">
+                                <svg id="iconOrder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+                                    <polyline points="17 1 21 5 17 9"/>
+                                    <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                                    <polyline points="7 23 3 19 7 15"/>
+                                    <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                                </svg>
+                                <svg id="iconShuffle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="display:none">
+                                    <rect x="3" y="3" width="18" height="18" rx="3"/>
+                                    <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="8.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/>
+                                    <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+                                </svg>
+                            </button>
+                            <button class="music-mode-btn" id="btnRepeatToggle" title="전체 반복 / 한 곡 반복" data-mode="all">
+                                <span id="iconRepeatAll" style="font-size:15px; font-weight:800; letter-spacing:-0.5px;">A</span>
+                                <span id="iconRepeatOne" style="font-size:15px; font-weight:800; display:none;">1</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 볼륨 슬라이더 -->
+                    <div class="music-volume">
+                        <button class="music-vol-icon" id="volIconBtn" title="음소거 토글">
+                            <svg id="volIconNormal" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                                <path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>
                             </svg>
+                            <svg id="volIconMute" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="display:none">
+                                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                            </svg>
+                        </button>
+                        <input type="range" id="musicVolume" class="volume-slider" min="0" max="100" value="70">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="opacity:0.4; flex-shrink:0">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                    </div>
+                    <div class="music-coming-soon" style="display:none"></div>
+                    <!-- 아코디언 곡 목록 -->
+                    <div class="track-accordion">
+                        <button class="track-list-toggle" id="trackListToggle">
+                            <span class="playlist-radio" id="radioDefault"></span>
+                            <span id="trackListHeader">곡 목록 (50/50)</span>
+                            <span class="accordion-arrow">▼</span>
+                        </button>
+                        <div class="track-list-body" id="trackListBody">
+                            <div class="track-list" id="trackList"></div>
+                            <div class="track-list-actions">
+                                <button class="track-action-btn" id="btnCheckAll">전체 선택</button>
+                                <button class="track-action-btn" id="btnUncheckAll">전체 해제</button>
+                            </div>
                         </div>
-                        <div class="music-coming-soon" style="display:none"></div>
-                        <!-- 아코디언 곡 목록 -->
-                        <div class="track-accordion">
-                            <button class="track-list-toggle" id="trackListToggle">
-                                <span id="trackListHeader">곡 목록 (42/42)</span>
-                                <span class="accordion-arrow">▼</span>
-                            </button>
-                            <div class="track-list-body" id="trackListBody">
-                                <div class="track-list" id="trackList"></div>
-                                <div class="track-list-actions">
-                                    <button class="track-action-btn" id="btnCheckAll">전체 선택</button>
-                                    <button class="track-action-btn" id="btnUncheckAll">전체 해제</button>
-                                </div>
+                    </div>
+                    <!-- 내 음악 섹션 -->
+                    <div class="track-accordion" style="margin-top: 8px;">
+                        <button class="track-list-toggle" id="localTrackListToggle">
+                            <span class="playlist-radio" id="radioLocal"></span>
+                            <span id="localTrackListHeader">내 음악 (0/0)</span>
+                            <span class="accordion-arrow">▼</span>
+                        </button>
+                        <div class="track-list-body" id="localTrackListBody">
+                            <div class="track-list" id="localTrackList"></div>
+                            <div class="track-list-actions">
+                                <label for="localMusicFile" class="track-action-btn" style="cursor:pointer;">+ 음악 추가</label>
+                                <input type="file" id="localMusicFile" accept="audio/*" multiple style="display:none;">
+                                <button class="track-action-btn" id="btnCheckAllLocal">전체 선택</button>
+                                <button class="track-action-btn" id="btnUncheckAllLocal">전체 해제</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- ─── 단축키 모달 ───────────────────────────────── -->
+        <!-- ─── 단축키 모달 ───────────────────────────────── -->
     <div id="shortcutsOverlay" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -435,20 +457,31 @@
         loadSettings();
         initSettingsListeners();
         initModals();
-        initMusicUI();
+        initMusicUI().then(() => {
+            // 기본 곡 전체선택 / 전체해제
+            document.getElementById('btnCheckAll')?.addEventListener('click', () => {
+                checkedTracks = TRACKS.map(() => true);
+                MLS.set('checked', JSON.stringify(checkedTracks));
+                renderTrackList();
+            });
+            document.getElementById('btnUncheckAll')?.addEventListener('click', () => {
+                checkedTracks = TRACKS.map(() => false);
+                MLS.set('checked', JSON.stringify(checkedTracks));
+                renderTrackList();
+            });
+            // 내 음악 전체선택 / 전체해제
+            document.getElementById('btnCheckAllLocal')?.addEventListener('click', () => {
+                checkedLocalTracks = localTracks.map(() => true);
+                MLS.set('checkedLocal', JSON.stringify(checkedLocalTracks));
+                renderLocalTrackList();
+            });
+            document.getElementById('btnUncheckAllLocal')?.addEventListener('click', () => {
+                checkedLocalTracks = localTracks.map(() => false);
+                MLS.set('checkedLocal', JSON.stringify(checkedLocalTracks));
+                renderLocalTrackList();
+            });
+        });
         initGameListeners();
-
-        // 전체선택 / 전체해제
-        document.getElementById('btnCheckAll')?.addEventListener('click', () => {
-            checkedTracks = TRACKS.map(() => true);
-            MLS.set('checked', JSON.stringify(checkedTracks));
-            renderTrackList();
-        });
-        document.getElementById('btnUncheckAll')?.addEventListener('click', () => {
-            checkedTracks = TRACKS.map(() => false);
-            MLS.set('checked', JSON.stringify(checkedTracks));
-            renderTrackList();
-        });
     </script>
 </body>
 </html>

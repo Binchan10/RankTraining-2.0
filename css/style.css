@@ -1374,10 +1374,14 @@ kbd {
 
 /* ─── 3개 모달 1.15배 ────────────────────────────────── */
 #gameSettingsOverlay .modal-box,
-#customOverlay .modal-box,
 #shortcutsOverlay .modal-box {
     transform-origin: center;
     zoom: 1.15;
+}
+
+#customOverlay .modal-box {
+    transform-origin: center;
+    zoom: 1.1;
 }
 
 /* ─── 랭크표 모달 크게 ───────────────────────────────── */
@@ -1677,7 +1681,7 @@ kbd {
 }
 
 .track-list-body.open {
-    max-height: 260px;
+    max-height: 220px;
     overflow-y: auto;
 }
 
@@ -1835,4 +1839,67 @@ kbd {
     color: #63b3ff;
     font-weight: 900;
     line-height: 1;
+}
+
+/* ─── 활성 플레이리스트 헤더 ─────────────────────────── */
+.track-list-toggle.playlist-active {
+    color: #d4af37;
+    border-left: 2px solid rgba(212,175,55,0.6);
+    background: rgba(212,175,55,0.06);
+}
+.track-list-toggle.playlist-active:hover {
+    background: rgba(212,175,55,0.10);
+}
+
+/* ─── 트랙 삭제 버튼 ─────────────────────────────────── */
+.track-delete-btn {
+    background: none; border: none;
+    color: rgba(221,228,240,0.2);
+    font-size: 10px; cursor: pointer;
+    padding: 4px 5px; border-radius: 4px;
+    transition: all 0.15s; flex-shrink: 0;
+}
+.track-delete-btn:hover {
+    color: rgba(245,100,100,0.8);
+    background: rgba(245,100,100,0.1);
+}
+
+/* ─── 내 음악 비어있을 때 ────────────────────────────── */
+.track-empty {
+    padding: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(221,228,240,0.3);
+}
+
+/* ─── 플레이리스트 라디오 버튼 ───────────────────────── */
+.playlist-radio {
+    width: 14px; height: 14px; flex-shrink: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(221,228,240,0.25);
+    background: transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+    display: inline-block;
+}
+.playlist-radio.selected {
+    border-color: #d4af37;
+    background: #d4af37;
+    box-shadow: 0 0 5px rgba(212,175,55,0.4);
+}
+
+/* ─── 커스텀 듀얼 패널 모달 ──────────────────────────── */
+.custom-dual-overlay {
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+    gap: 24px;
+}
+
+.custom-panel {
+    width: 380px;
+    max-width: 44vw;
+    max-height: 74vh;
+    overflow-y: auto;
+    flex-shrink: 0;
 }

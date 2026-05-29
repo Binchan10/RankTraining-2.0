@@ -54,12 +54,12 @@ function showResult(stats) {
 
     // 결과창 표시 후 차트 그리기
     document.getElementById('result').style.display = 'flex';
-    requestAnimationFrame(() => drawChart(segmentHits, segmentDuration));
+    requestAnimationFrame(() => drawChart(segmentHits, segmentMisses, segmentDuration));
 }
 
 // ─── 구간별 정타 차트 ────────────────────────────────────
 
-function drawChart(data, segmentDuration) {
+function drawChart(data, missData, segmentDuration) {
     const canvas = document.getElementById('chartCanvas');
     const dpr    = window.devicePixelRatio || 1;
     const rect   = canvas.getBoundingClientRect();
@@ -168,4 +168,60 @@ function drawChart(data, segmentDuration) {
         ctx.textAlign  = 'center';
         ctx.fillText(p.label, xBoundary, pad.top + chartH + 18);
     });
+
+    // ── 툴팁 이벤트 ──
+    const segW = chartW / data.length;
+
+    // 기존 툴팁 제거 후 새로 생성
+    let tooltip = document.getElementById('chartTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'chartTooltip';
+        canvas.parentNode.style.position = 'relative';
+        canvas.parentNode.appendChild(tooltip);
+    }
+    tooltip.style.cssText = `
+        position: absolute; pointer-events: none; display: none;
+        background: rgba(14,16,24,0.96); border: 1px solid rgba(99,179,255,0.2);
+        border-radius: 10px; padding: 12px 16px; font-size: 14px;
+        color: rgba(221,228,240,0.9); white-space: nowrap;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.55); z-index: 10;
+        min-width: 120px;
+    `;
+
+    canvas.onmousemove = e => {
+        const r   = canvas.getBoundingClientRect();
+        const mx  = (e.clientX - r.left) * (canvas.width  / r.width)  / dpr;
+        const my  = (e.clientY - r.top)  * (canvas.height / r.height) / dpr;
+
+        // 차트 영역 안인지 체크
+        if (mx < pad.left || mx > pad.left + chartW || my < pad.top || my > pad.top + chartH) {
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        const idx = Math.floor((mx - pad.left) / segW);
+        if (idx < 0 || idx >= data.length) { tooltip.style.display = 'none'; return; }
+
+        const hits   = data[idx];
+        const misses = missData ? missData[idx] : 0;
+        const start  = Math.round(idx * segmentDuration);
+        const end    = Math.round((idx + 1) * segmentDuration);
+
+        tooltip.innerHTML =
+            `<div style="color:rgba(221,228,240,0.6);font-size:13px;margin-bottom:9px;letter-spacing:0.3px">${start}s ~ ${end}s</div>` +
+            `<div style="color:#63b3ff;font-size:15px;font-weight:700;margin-bottom:5px">정타 ${hits}</div>` +
+            `<div style="color:#ff6b6b;font-size:15px;font-weight:700">오타 ${misses}</div>`;
+
+        // 툴팁 위치 (캔버스 기준 %)
+        const canvasRect = canvas.getBoundingClientRect();
+        const parentRect = canvas.parentNode.getBoundingClientRect();
+        const tipX = e.clientX - parentRect.left + 12;
+        const tipY = e.clientY - parentRect.top  - 10;
+        tooltip.style.left    = tipX + 'px';
+        tooltip.style.top     = tipY + 'px';
+        tooltip.style.display = 'block';
+    };
+
+    canvas.onmouseleave = () => { tooltip.style.display = 'none'; };
 }
