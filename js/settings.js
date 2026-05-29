@@ -79,71 +79,106 @@ function updateBgStatus(name) {
         name ? '선택됨: ' + name : '선택된 이미지 없음';
 }
 
-// ─── 색상 프리셋 ────────────────────────────────────────
+// ─── 판 색상 커스텀 ─────────────────────────────────────
 
-function applyColorPreset(presetId) {
-    const preset = COLOR_PRESETS[presetId] || COLOR_PRESETS.classic;
-    const root   = document.documentElement.style;
-    root.setProperty('--player-grad',   preset.player.grad);
-    root.setProperty('--player-text',   preset.player.text);
-    root.setProperty('--player-border', preset.player.border);
-    root.setProperty('--enemy-grad',    preset.enemy.grad);
-    root.setProperty('--enemy-text',    preset.enemy.text);
-    root.setProperty('--enemy-border',  preset.enemy.border);
+// 현재 선택된 색상 id
+let playerColorId = LS.get('playerColor', 'blue1');
+let enemyColorId  = LS.get('enemyColor',  'red1');
+
+// 내 판 / 상대 판 중 어느 쪽을 선택 중인지
+let tileTarget = 'player'; // 'player' | 'enemy'
+
+function getTileColor(id) {
+    return TILE_COLORS.find(c => c.id === id) || TILE_COLORS[0];
 }
 
-// ─── 프리셋 미리보기 렌더링 ─────────────────────────────
+function applyTileColors() {
+    const p = getTileColor(playerColorId);
+    const e = getTileColor(enemyColorId);
+    const root = document.documentElement.style;
+    root.setProperty('--player-grad',   p.grad);
+    root.setProperty('--player-text',   p.text);
+    root.setProperty('--player-border', p.border);
+    root.setProperty('--enemy-grad',    e.grad);
+    root.setProperty('--enemy-text',    e.text);
+    root.setProperty('--enemy-border',  e.border);
+}
 
-const PRESET_NAMES = {
-    classic: '클래식 (Classic)',
-    aurora:  '오로라 (Aurora)',
-    solar:   '솔라 (Solar)',
-    forest:  '포레스트 (Forest)',
-    mono:    '모노 (Mono)'
-};
-
-function renderPresetList(currentPreset) {
-    const container = document.getElementById('presetList');
+function renderTileColorPicker() {
+    const container = document.getElementById('tileColorGrid');
     if (!container) return;
-    container.innerHTML = '';
 
-    Object.keys(COLOR_PRESETS).forEach(key => {
-        const preset = COLOR_PRESETS[key];
-        const item = document.createElement('div');
-        item.className = 'preset-item' + (key === currentPreset ? ' active' : '');
-        item.dataset.preset = key;
+    const currentId = tileTarget === 'player' ? playerColorId : enemyColorId;
+    const blockedId = tileTarget === 'player' ? enemyColorId  : playerColorId;
 
-        const chips = document.createElement('div');
-        chips.className = 'preset-chips';
+    container.innerHTML = TILE_COLORS.map(c => {
+        const isSelected = c.id === currentId;
+        const isBlocked  = c.id === blockedId;
+        return `<div class="tile-color-chip ${isSelected ? 'selected' : ''} ${isBlocked ? 'blocked' : ''}"
+                     data-id="${c.id}"
+                     style="background: ${c.grad};">
+                    ${isBlocked ? '<span class="chip-block-x">✕</span>' : ''}
+                </div>`;
+    }).join('');
 
-        const pChip = document.createElement('div');
-        pChip.className = 'preset-chip';
-        pChip.style.background = preset.player.grad;
-        pChip.title = '내 판';
-
-        const eChip = document.createElement('div');
-        eChip.className = 'preset-chip';
-        eChip.style.background = preset.enemy.grad;
-        eChip.title = '상대 판';
-
-        chips.appendChild(pChip);
-        chips.appendChild(eChip);
-
-        const label = document.createElement('span');
-        label.className = 'preset-name';
-        label.textContent = PRESET_NAMES[key];
-
-        item.appendChild(chips);
-        item.appendChild(label);
-
-        item.addEventListener('click', () => {
-            document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
-            item.classList.add('active');
-            LS.set('preset', key);
-            applyColorPreset(key);
+    container.querySelectorAll('.tile-color-chip:not(.blocked)').forEach(chip => {
+        chip.addEventListener('click', () => {
+            if (tileTarget === 'player') {
+                playerColorId = chip.dataset.id;
+                LS.set('playerColor', playerColorId);
+            } else {
+                enemyColorId = chip.dataset.id;
+                LS.set('enemyColor', enemyColorId);
+            }
+            applyTileColors();
+            renderTileColorPicker();
+            updateTileTargetBtns();
         });
+    });
+}
 
-        container.appendChild(item);
+function updateTileTargetBtns() {
+    const pBtn   = document.getElementById('btnTilePlayer');
+    const eBtn   = document.getElementById('btnTileEnemy');
+    const pDot   = document.getElementById('dotPlayer');
+    const eDot   = document.getElementById('dotEnemy');
+    if (!pBtn || !eBtn) return;
+
+    const p = getTileColor(playerColorId);
+    const e = getTileColor(enemyColorId);
+
+    pBtn.classList.toggle('active', tileTarget === 'player');
+    eBtn.classList.toggle('active', tileTarget === 'enemy');
+
+    if (pDot) pDot.style.background = p.grad;
+    if (eDot) eDot.style.background = e.grad;
+}
+
+function initTileColorPicker() {
+    const pBtn = document.getElementById('btnTilePlayer');
+    const eBtn = document.getElementById('btnTileEnemy');
+    if (!pBtn || !eBtn) return;
+
+    pBtn.addEventListener('click', () => {
+        tileTarget = 'player';
+        updateTileTargetBtns();
+        renderTileColorPicker();
+    });
+
+    eBtn.addEventListener('click', () => {
+        tileTarget = 'enemy';
+        updateTileTargetBtns();
+        renderTileColorPicker();
+    });
+
+    // 탭 전환
+    document.querySelectorAll('.custom-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.custom-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.custom-tab-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('panel' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1))?.classList.add('active');
+        });
     });
 }
 
@@ -156,7 +191,6 @@ function saveSettings() {
     LS.set('flip',      document.getElementById('optFlip').checked);
     LS.set('mute',      document.getElementById('optMute').checked);
     LS.set('hideTimer', document.getElementById('optHideTimer').checked);
-    LS.set('preset', LS.get('preset', 'classic'));
 }
 
 function loadSettings() {
@@ -168,9 +202,12 @@ function loadSettings() {
     document.getElementById('optHideTimer').checked = LS.get('hideTimer', 'false') === 'true';
     applyHideTimer(LS.get('hideTimer', 'false') === 'true');
 
-    const preset = LS.get('preset', 'classic');
-    applyColorPreset(preset);
-    renderPresetList(preset);
+    playerColorId = LS.get('playerColor', 'blue1');
+    enemyColorId  = LS.get('enemyColor',  'red1');
+    applyTileColors();
+    initTileColorPicker();
+    renderTileColorPicker();
+    updateTileTargetBtns();
 
     // 배경이미지는 IndexedDB에서 비동기로 불러옴
     initBgDB().then(() => bgDBLoad()).then(row => {

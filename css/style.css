@@ -1899,7 +1899,109 @@ kbd {
 .custom-panel {
     width: 380px;
     max-width: 44vw;
-    max-height: 74vh;
-    overflow-y: auto;
+    overflow: visible;
     flex-shrink: 0;
+}
+
+/* ─── 화면 모달 탭 ───────────────────────────────────── */
+.custom-tabs {
+    display: flex; gap: 6px;
+    margin-bottom: 18px;
+}
+
+.custom-tab {
+    flex: 1; padding: 8px 0;
+    border-radius: 8px; border: 1.5px solid rgba(221,228,240,0.12);
+    background: transparent;
+    color: rgba(221,228,240,0.4);
+    font-family: 'Pretendard', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s;
+}
+
+.custom-tab.active {
+    border-color: rgba(221,228,240,0.35);
+    color: rgba(221,228,240,0.9);
+    background: rgba(221,228,240,0.06);
+}
+
+.custom-tab:hover:not(.active) {
+    color: rgba(221,228,240,0.6);
+    border-color: rgba(221,228,240,0.2);
+}
+
+.custom-tab-panel { display: none; }
+.custom-tab-panel.active { display: block; }
+
+/* ─── 판 색상 커스텀 ─────────────────────────────────── */
+.tile-target-btns {
+    display: flex; gap: 8px; margin-bottom: 14px;
+}
+
+.tile-target-btn {
+    flex: 1; padding: 9px 0;
+    border-radius: 8px; border: 1.5px solid rgba(221,228,240,0.15);
+    background: rgba(221,228,240,0.04);
+    color: rgba(221,228,240,0.55);
+    font-family: 'Pretendard', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.18s;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+
+.tile-target-dot {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(255,255,255,0.2);
+}
+
+.tile-target-btn.active {
+    border-color: rgba(221,228,240,0.45);
+    color: rgba(221,228,240,0.95);
+    background: rgba(221,228,240,0.07);
+}
+
+.tile-target-btn:hover:not(.active) {
+    border-color: rgba(221,228,240,0.28);
+    color: rgba(221,228,240,0.75);
+}
+
+.tile-color-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.tile-color-chip {
+    aspect-ratio: 1;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+}
+
+.tile-color-chip:hover:not(.blocked) {
+    transform: scale(1.12);
+    border-color: rgba(221,228,240,0.5);
+}
+
+.tile-color-chip.selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+    transform: scale(1.08);
+}
+
+.tile-color-chip.blocked {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.chip-block-x {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7);
 }

@@ -128,18 +128,36 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="setting-item-v2">
-                    <label class="setting-label" for="colorPreset">판 색상 프리셋</label>
-                    <div class="preset-list" id="presetList"></div>
+                <!-- 탭 버튼 -->
+                <div class="custom-tabs">
+                    <button class="custom-tab active" id="tabTileColor" data-tab="tileColor">판 색상</button>
+                    <button class="custom-tab" id="tabBg" data-tab="bg">배경</button>
                 </div>
-                <div class="setting-item-v2" style="margin-top:18px;">
-                    <div class="setting-label">배경 이미지</div>
-                    <div class="setting-row-v2">
-                        <label for="bgFile" class="file-upload-btn">이미지 선택</label>
-                        <input type="file" id="bgFile" accept="image/*" style="display:none;">
-                        <button type="button" id="bgClear" class="danger-btn">제거</button>
+
+                <!-- 판 색상 탭 -->
+                <div class="custom-tab-panel active" id="panelTileColor">
+                    <div class="tile-target-btns">
+                        <button id="btnTilePlayer" class="tile-target-btn active">
+                            <span class="tile-target-dot" id="dotPlayer"></span>내 판
+                        </button>
+                        <button id="btnTileEnemy" class="tile-target-btn">
+                            <span class="tile-target-dot" id="dotEnemy"></span>상대 판
+                        </button>
                     </div>
-                    <div id="bgStatus" class="setting-help">선택된 이미지 없음</div>
+                    <div class="tile-color-grid" id="tileColorGrid"></div>
+                </div>
+
+                <!-- 배경 탭 -->
+                <div class="custom-tab-panel" id="panelBg">
+                    <div class="setting-item-v2">
+                        <div class="setting-label">배경 이미지</div>
+                        <div class="setting-row-v2">
+                            <label for="bgFile" class="file-upload-btn">이미지 선택</label>
+                            <input type="file" id="bgFile" accept="image/*" style="display:none;">
+                            <button type="button" id="bgClear" class="danger-btn">제거</button>
+                        </div>
+                        <div id="bgStatus" class="setting-help">선택된 이미지 없음</div>
+                    </div>
                 </div>
             </div>
         </div>
