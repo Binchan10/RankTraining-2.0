@@ -348,10 +348,11 @@ function renderHofList(listId, isEasy) {
     }
 
     container.innerHTML = records.map((r, i) => {
-        const rankClass = 'hof-rank-' + r.rank.replace('+', 'p');
+        const rank = getRank(r.hitsPerMin ?? r.hits);
+        const rankClass = 'hof-rank-' + rank.replace('+', 'p');
         return `<div class="hof-row">
             <span class="hof-num">${i + 1}</span>
-            <span class="hof-rank-badge ${rankClass}">${r.rank}</span>
+            <span class="hof-rank-badge ${rankClass}">${rank}</span>
             <span class="hof-hits">${r.hits}</span>
             <span class="hof-speed">${hofSpeedLabel(r)}</span>
             <span class="hof-date">${r.date}</span>
@@ -447,10 +448,11 @@ function renderHofListModal(listId, isEasy) {
     }
 
     container.innerHTML = records.map((r, i) => {
-        const rankClass = 'hof-rank-' + r.rank.replace('+', 'p');
+        const rank = getRank(r.hitsPerMin ?? r.hits);
+        const rankClass = 'hof-rank-' + rank.replace('+', 'p');
         return `<div class="hof-row hof-row--modal">
             <span class="hof-num">${i + 1}</span>
-            <span class="hof-rank-badge ${rankClass}">${r.rank}</span>
+            <span class="hof-rank-badge ${rankClass}">${rank}</span>
             <span class="hof-hits">${r.hits}</span>
             <span class="hof-speed">${hofSpeedLabel(r)}</span>
             <span class="hof-date">${r.date}</span>
